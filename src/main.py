@@ -1,5 +1,5 @@
 import os
-from load_model import load_and_convert
+from load_model import load_and_convert_yolo
 from optimize_model import optimize_model
 
 
@@ -10,9 +10,8 @@ def main():
     # Model configuration
     model_name = "yolo11n"
     model_name_ext = "yolo11n.pt"  # YOLO11n model
-    model_type = "yolo"
   
-    load_and_convert(model_name_ext, model_type)
+    load_and_convert_yolo(model_name_ext)
     
     saved_model_path = "yolo11n_saved_model"
     
