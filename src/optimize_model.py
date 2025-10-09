@@ -17,13 +17,12 @@ def optimize_model(model_path: str, output_dir: str = "models/optimized_models")
     
     converter = tf.lite.TFLiteConverter.from_saved_model(model_path)
     
-    # Apply optimizations  --------------
+    # Apply optimizations --- from slides from lecutre 3
     converter.optimizations = [tf.lite.Optimize.DEFAULT]
     
     # Convert to TFLite
     tflite_model = converter.convert()
     
-
     output_path = os.path.join(output_dir, "optimized_model.tflite")
     with open(output_path, 'wb') as f:
         f.write(tflite_model)
