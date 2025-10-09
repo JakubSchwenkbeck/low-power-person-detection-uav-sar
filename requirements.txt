@@ -1,0 +1,9 @@
+tflite_runtime
+ipykernel
+numpy==1.25
+matplotlib
+Pillow
+ultralytics
+tensorflow
+edge_impulse_linux -i https://pypi.python.org/simple
+opencv-contrib-python
