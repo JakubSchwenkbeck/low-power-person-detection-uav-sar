@@ -3,35 +3,46 @@ import os
 
 
 def optimize_model(model_name: str, model_path: str, output_dir: str = "models/optimized_models"):
-    """Calls float16 and int8 quantization"""
-    optimize_model_float16(model_name, model_path, output_dir)
-    optimize_model_int8(model_name, model_path, output_dir)
+    """Generate different variants of optimized models"""
+    
 
-
-def optimize_model_float16(model_name: str, model_path: str, output_dir: str = "models/optimized_models"):
-    """Float16 quantizations"""
     os.makedirs(output_dir, exist_ok=True)
+    
+    # Size optimized variants 
+    _convert(model_name, model_path, output_dir, "size_float32", tf.lite.Optimize.OPTIMIZE_FOR_SIZE, None)
+    _convert(model_name, model_path, output_dir, "size_float16", tf.lite.Optimize.OPTIMIZE_FOR_SIZE, tf.float16)
+    _convert(model_name, model_path, output_dir, "size_dynamic", tf.lite.Optimize.OPTIMIZE_FOR_SIZE, "dynamic")
+    
+    # Latency optimized variants
+    _convert(model_name, model_path, output_dir, "latency_float32", tf.lite.Optimize.OPTIMIZE_FOR_LATENCY, None)
+    _convert(model_name, model_path, output_dir, "latency_float16", tf.lite.Optimize.OPTIMIZE_FOR_LATENCY, tf.float16)
+    _convert(model_name, model_path, output_dir, "latency_dynamic", tf.lite.Optimize.OPTIMIZE_FOR_LATENCY, "dynamic")
+
+
+
+
+def _convert(model_name: str, model_path: str, output_dir: str, suffix: str, optimization, quant_type):
+    """Helper function to convert model with specific settings"""
+
+
     converter = tf.lite.TFLiteConverter.from_saved_model(model_path)
-    converter.optimizations = [tf.lite.Optimize.DEFAULT]
-    converter.target_spec.supported_types = [tf.float16]
+    converter.optimizations = [optimization]
+    
+    if quant_type == tf.float16:
+        converter.target_spec.supported_types = [tf.float16]
+    elif quant_type == "dynamic":
+        converter.optimizations = [tf.lite.Optimize.DEFAULT]
+    
     tflite_model = converter.convert()
-    output_path = os.path.join(output_dir, f"{model_name}_float16.tflite")
+
+
+    output_path = os.path.join(output_dir, f"{model_name}_{suffix}.tflite")
+
     with open(output_path, 'wb') as f:
         f.write(tflite_model)
-    print(f"Model saved: {output_path} ({len(tflite_model) / (1024*1024):.2f} MB)")
-    return output_path
 
+    print(f"{suffix}: {output_path} ({len(tflite_model) / (1024*1024):.2f} MB)")
 
-def optimize_model_int8(model_name: str, model_path: str, output_dir: str = "models/optimized_models"):
-    """Dynamic range quantization - weights only"""
-    os.makedirs(output_dir, exist_ok=True)
-    converter = tf.lite.TFLiteConverter.from_saved_model(model_path)
-    converter.optimizations = [tf.lite.Optimize.DEFAULT]
-    tflite_model = converter.convert()
-    output_path = os.path.join(output_dir, f"{model_name}_dynamic.tflite")
-    with open(output_path, 'wb') as f:
-        f.write(tflite_model)
-    print(f"Model saved: {output_path} ({len(tflite_model) / (1024*1024):.2f} MB)")
     return output_path
 
 

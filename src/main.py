@@ -7,6 +7,7 @@ def main():
     """
     Main pipeline to load and optimize models.
     """
+
     # Model configuration
     model_name = "yolo11n"
     model_name_ext = "yolo11n.pt"  # YOLO11n model
@@ -16,7 +17,7 @@ def main():
 
    
     if os.path.exists(saved_model_path):
-        optimized_path = optimize_model(model_name, saved_model_path)
+        _optimized_path = optimize_model(model_name, saved_model_path)
    
 
 
