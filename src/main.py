@@ -1,5 +1,5 @@
 import os
-from load_model import load_and_convert_yolo
+from load_model import load_yolo
 from optimize_model import optimize_model
 
 
@@ -11,10 +11,9 @@ def main():
     model_name = "yolo11n"
     model_name_ext = "yolo11n.pt"  # YOLO11n model
   
-    load_and_convert_yolo(model_name_ext)
     
-    saved_model_path = "yolo11n_saved_model"
-    
+    saved_model_path = load_yolo(model_name, model_name_ext)
+
    
     if os.path.exists(saved_model_path):
         optimized_path = optimize_model(model_name, saved_model_path)
