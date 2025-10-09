@@ -2,7 +2,7 @@ import tensorflow as tf
 import os
 
 
-def optimize_model(model_path: str, output_dir: str = "models/optimized_models"):
+def optimize_model(model_name: str, model_path: str, output_dir: str = "models/optimized_models"):
     """
     Model optimization using TensorFlow Lite optimizations.
     
@@ -23,7 +23,7 @@ def optimize_model(model_path: str, output_dir: str = "models/optimized_models")
     # Convert to TFLite
     tflite_model = converter.convert()
     
-    output_path = os.path.join(output_dir, "optimized_model.tflite")
+    output_path = os.path.join(output_dir, f"{model_name}_optimized_model.tflite")
     with open(output_path, 'wb') as f:
         f.write(tflite_model)
     
