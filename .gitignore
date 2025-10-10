@@ -206,7 +206,22 @@ marimo/_static/
 marimo/_lsp/
 __marimo__/
 
+
+# venv
 tinyml
+
+# yolo11n model:
+yolo11n_saved_model
+*.pt 
+*.onnx
+*.npy
+
+## efficientdet_do
+efficientdet_d0_saved_model/
+
+## mobilenet_ssd
+mobilenet_ssd_saved_model/
+
 
 data/images
 data/models
