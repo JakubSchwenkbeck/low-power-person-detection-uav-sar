@@ -14,7 +14,7 @@ import tflite_runtime.interpreter as tflite
 # model_path = "./models/ssd-mobilenet-v1-tflite-default-v1.tflite"
 # model_path = "models/yolo11n_float32.tflite"
 # model_path = "models/yolo11n_latency_dynamic.tflite"
-model_path = "models/yolo11n_latency_float16.tflite"
+model_path = "./data/models/yolov5s_f16.tflite"
 # fomo_model_path = "models/FOMO-int8.eim"
 
 interpreter = tflite.Interpreter(model_path=model_path)
@@ -170,7 +170,9 @@ def detect_objects(img_path, conf=0.5):
         #               thickness=2)
         
         # Prepare the label text
+        print(det)
         class_id = int(det['class_id'])
+        print(class_id)
         class_name = labels[class_id]
         score = det['score']
         label = f'{class_name}: {score:.2f}'
@@ -249,12 +251,12 @@ def detect_objects(img_path, conf=0.5):
     #                  color='red', fontsize=12, backgroundcolor='white')
             
 
-labels = load_labels('./models/coco_labels.txt')
+labels = load_labels('./data/labels/coco_labels.txt')
 len(labels)
 print(labels[:20])
 
 
-img_path = "./images/beatch.jpg"
+img_path = "./data/images/val2017/000000481404.jpg"
 detect_objects(img_path, 0.5)
 
 

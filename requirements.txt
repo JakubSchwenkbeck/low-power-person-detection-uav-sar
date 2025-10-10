@@ -2,8 +2,8 @@ tflite_runtime
 ipykernel
 matplotlib
 ultralytics
-tensorflow
+tensorflow==2.14
 edge_impulse_linux -i https://pypi.python.org/simple
-opencv-contrib-python
+opencv-contrib-python==4.8.1.78
 pillow
 numpy==1.25
