@@ -1,0 +1,4 @@
+tflite-runtime
+opencv-python==4.4.0.46
+pillow
+numpy==1.25
