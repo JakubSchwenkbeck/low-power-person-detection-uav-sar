@@ -1,0 +1,10 @@
+numpy==1.25
+tensorflow==2.14
+onnx==1.18
+opencv-contrib-python
+ipykernel
+matplotlib
+ultralytics
+tensorflow-hub
+pillow
+tflite_runtime

@@ -225,3 +225,6 @@ mobilenet_ssd_saved_model/
 
 data/images
 data/models
+
+conversion_venv
+runtime_venv
