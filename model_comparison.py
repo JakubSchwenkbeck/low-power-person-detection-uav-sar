@@ -8,23 +8,6 @@ import tflite_runtime.interpreter as tflite
 # from edge_impulse_linux.image import ImageImpulseRunner
 
 
-# print("NumPy:", np.__version__)
-# print("Pillow:", Image.__version__)
-
-# model_path = "./models/ssd-mobilenet-v1-tflite-default-v1.tflite"
-# model_path = "models/yolo11n_float32.tflite"
-# model_path = "models/yolo11n_latency_dynamic.tflite"
-model_path = "models/yolo11n_latency_float16.tflite"
-# fomo_model_path = "models/FOMO-int8.eim"
-
-interpreter = tflite.Interpreter(model_path=model_path)
-interpreter.allocate_tensors()
-print("TFLite Interpreter created successfully!")
-
-input_details = interpreter.get_input_details()
-output_details = interpreter.get_output_details()
-# print(input_details)
-# print(output_details)
 
 def load_labels(label_path):
     with open(label_path, 'r') as f:
@@ -104,158 +87,203 @@ def compute_iou(box, boxes):
     return inter_area / (union_area + 1e-6)
 
 
-def detect_objects(img_path, conf=0.5):
+def run_inference(image: np.ndarray,
+                  model,
+                  interpreter: tflite.Interpreter,
+                  conf_threshold: float = 0.5,
+                  profiling: bool = False
+                  ):
+    """
+    Run inference ...
 
-    original_img = cv2.imread(img_path)
+    To measure:
+    - end-to-end latency
+    - inference latency
+    - throughput (FPS)
+    - memory footprint
+    - CPU utilization
+    - temperature
+    - power consumption
+    - precision and recall
+    - mAP (mean Average Precision)
+    - qualitative analysis
 
-    # Get original image dimensions
-    original_h, original_w = original_img.shape[:2]
+    Args:
+        image: The input image in cv2 format (numpy.ndarray).
+    """
 
-    img = cv2.cvtColor(original_img, cv2.COLOR_BGR2RGB)
-    img = cv2.resize(img, (input_details[0]['shape'][1], 
-                      input_details[0]['shape'][2]))
+    if model not in ['yolo', 'mobilenet', 'efficientdet']:
+        print("Model not supported")
+        return
     
-    resizing_factor_w = img.shape[1] / original_w
-    resizing_factor_h = img.shape[0] / original_h
-    print(f"Resizing factors - Width: {resizing_factor_w}, Height: {resizing_factor_h}")
+    input_img = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+    input_img = cv2.resize(input_img, (interpreter.get_input_details()[0]['shape'][1],
+                                         interpreter.get_input_details()[0]['shape'][2]))
 
-    img = img.astype(np.float32) / 255.0  # normalize to [0, 1]
-    input_data = np.expand_dims(img, axis=0)
-    
+    resizing_factor_w = input_img.shape[1] / image.shape[1]
+    resizing_factor_h = input_img.shape[0] / image.shape[0]
+
+    # print(f"Resizing factors - Width: {resizing_factor_w}, Height: {resizing_factor_h}")
+
+    if model in ['yolo']:
+        input_img = input_img.astype(np.float32) / 255.0  # normalize to [0, 1]
+
+    input_data = np.expand_dims(input_img, axis=0)
+
     # Inference
     start_time = time.time()
-    interpreter.set_tensor(input_details[0]['index'], input_data)
+    interpreter.set_tensor(interpreter.get_input_details()[0]['index'], input_data)
     interpreter.invoke()
     end_time = time.time()
     inference_time = (end_time - start_time) * 1000  # Convert to milliseconds
     print ("Inference time: {:.1f}ms".format(inference_time))
     
     # Post processing
-    output_data = interpreter.get_tensor(output_details[0]['index'])
-    # print(output_data)
-    # print(output_data.shape)
-    detections = postprocess_yolo(output_data, conf_threshold=0.5)
-    # print(detections)
-    detections = nms(detections, iou_threshold=0.45)
-    print(f"Found {len(detections)} objects after NMS")
-    # print(detections)
-
-
-    # Draw bounding boxes on the ORIGINAL image
-    for det in detections:
-        # Bbox is [center_x, center_y, width, height] normalized to model input size
-        center_x_norm, center_y_norm, w_norm, h_norm = det['bbox']
-
-        # Scale coordinates to original image size
-        box_w = int(w_norm / resizing_factor_w)
-        box_h = int(h_norm / resizing_factor_h)
-        center_x = int(center_x_norm / resizing_factor_w)
-        center_y = int(center_y_norm / resizing_factor_h)
-
-        # Calculate top-left corner (x1, y1)
-        x1 = center_x - (box_w // 2)
-        y1 = center_y - (box_h // 2)
-        
-        # Calculate bottom-right corner (x2, y2)
-        x2 = x1 + box_w
-        y2 = y1 + box_h
-        
-        # Draw the rectangle
-        # Note: OpenCV uses BGR color format, so (0, 255, 0) is green
-        cv2.rectangle(original_img, (x1, y1), (x2, y2), color=(0, 0, 255), thickness=2)
-        # cv2.rectangle(img, 
-        #               (int(center_x_norm - w_norm / 2), int(center_y_norm - h_norm / 2)), 
-        #               (int(center_x_norm + w_norm / 2), int(center_y_norm + h_norm / 2)),
-        #               color=(0, 255, 0),
-        #               thickness=2)
-        
-        # Prepare the label text
-        class_id = int(det['class_id'])
-        class_name = labels[class_id]
-        score = det['score']
-        label = f'{class_name}: {score:.2f}'
-
-        # Draw the label text above the box
-        cv2.putText(original_img, label, (x1, y1 - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 255), 2)
-
-    cv2.imshow("YOLO", original_img)
-    cv2.waitKey(0)  # Wait for a key press to close the window
-    cv2.destroyAllWindows()
-
-
-    # plt.figure(figsize=(12, 8))
-    # plt.imshow(img)
-    # for det in detections:
-    #     if det.score > conf:  # Adjust threshold as needed
-    #         ymin, xmin, ymax, xmax = det.bbox
-    #         (left, right, top, bottom) = (xmin * img.shape[1], xmax * img.shape[1], 
-    #                                       ymin * img.shape[0], ymax * img.shape[0])
-    #         rect = plt.Rectangle((left, top), right-left, bottom-top, 
-    #                              fill=False, color='red', linewidth=2)
-    #         plt.gca().add_patch(rect)
-    #         class_id = int(det.class_id)
-    #         class_name = labels[class_id]
-    #         plt.text(left, top-10, f'{class_name}: {det.score:.2f}', 
-    #                  color='red', fontsize=12, backgroundcolor='white')
-            
-
-    # for det in detections:
-    #     # Bbox is [center_x, center_y, width, height] normalized to input size (e.g., 640x640)
-    #     center_x, center_y, w, h = det['bbox']
-        
-    #     # Scale coordinates back to original image size
-    #     x_scaled = center_x * original_w
-    #     y_scaled = center_y * original_h
-    #     w_scaled = w * original_w
-    #     h_scaled = h * original_h
-        
-    #     # Calculate top-left corner (x1, y1)
-    #     left = x_scaled - (w_scaled / 2)
-    #     top = y_scaled - (h_scaled / 2)
-
-    #     # Create rectangle
-    #     rect = plt.Rectangle((left, top), w_scaled, h_scaled, 
-    #                          fill=False, color='red', linewidth=2)
-    #     plt.gca().add_patch(rect)
-        
-    #     # Add text label
-    #     class_id = int(det['class_id'])
-    #     class_name = labels[class_id]
-    #     score = det['score']
-    #     plt.text(left, top - 10, f'{class_name}: {score:.2f}', 
-    #              color='red', fontsize=12, backgroundcolor='white')
-
+    output_data = interpreter.get_tensor(interpreter.get_output_details()[0]['index'])
+    detections = []
+    boxes = []
+    classes = []
+    scores = []
+    num_detections = 0
 
     # Extract the outputs
-    # boxes = interpreter.get_tensor(output_details[0]['index'])[0]  
-    # classes = interpreter.get_tensor(output_details[1]['index'])[0]  
-    # scores = interpreter.get_tensor(output_details[2]['index'])[0]        
-    # num_detections = int(interpreter.get_tensor(output_details[3]['index'])[0])
-    
-    # Visualize the results
-    # plt.figure(figsize=(12, 8))
-    # plt.imshow(img)
-    # for i in range(num_detections):
-    #     if scores[i] > conf:  # Adjust threshold as needed
-    #         ymin, xmin, ymax, xmax = boxes[i]
-    #         (left, right, top, bottom) = (xmin * img.shape[1], xmax * img.shape[1], 
-    #                                       ymin * img.shape[0], ymax * img.shape[0])
-    #         rect = plt.Rectangle((left, top), right-left, bottom-top, 
-    #                              fill=False, color='red', linewidth=2)
-    #         plt.gca().add_patch(rect)
-    #         class_id = int(classes[i])
-    #         class_name = labels[class_id]
-    #         plt.text(left, top-10, f'{class_name}: {scores[i]:.2f}', 
-    #                  color='red', fontsize=12, backgroundcolor='white')
+    if model in ['yolo']:
+        detections = postprocess_yolo(output_data, conf_threshold=0.5)
+        detections = nms(detections, iou_threshold=0.45)
+    elif model in ['mobilenet', 'efficientdet']:
+        boxes = interpreter.get_tensor(interpreter.get_output_details()[0]['index'])[0]  
+        classes = interpreter.get_tensor(interpreter.get_output_details()[1]['index'])[0]  
+        scores = interpreter.get_tensor(interpreter.get_output_details()[2]['index'])[0]        
+        num_detections = int(interpreter.get_tensor(interpreter.get_output_details()[3]['index'])[0])
+
+    # Create the output image
+    output_img = image.copy()
+
+    # Draw bounding boxes on the ORIGINAL image
+    if model in ['yolo']:
+        for det in detections:
+            # Bbox is [center_x, center_y, width, height] normalized to model input size
+            center_x_norm, center_y_norm, w_norm, h_norm = det['bbox']
+
+            # Scale coordinates to original image size
+            box_w = int(w_norm / resizing_factor_w)
+            box_h = int(h_norm / resizing_factor_h)
+            center_x = int(center_x_norm / resizing_factor_w)
+            center_y = int(center_y_norm / resizing_factor_h)
+
+            # Calculate top-left corner (x1, y1)
+            x1 = center_x - (box_w // 2)
+            y1 = center_y - (box_h // 2)
             
+            # Calculate bottom-right corner (x2, y2)
+            x2 = x1 + box_w
+            y2 = y1 + box_h
+            
+            # Draw the rectangle
+            cv2.rectangle(output_img, (x1, y1), (x2, y2), color=(0, 0, 255), thickness=2)
+            
+            # Prepare the label text
+            class_id = int(det['class_id'])
+            class_name = labels[class_id]
+            score = det['score']
+            label = f'{class_name}: {score:.2f}'
+
+            # Draw the label text above the box
+            cv2.putText(output_img, label, (x1, y1 - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 255), 2)
+    elif model in ['mobilenet', 'efficientdet']:
+        
+        for i in range(num_detections):
+            if scores[i] > conf_threshold:  # Adjust threshold as needed
+                ymin, xmin, ymax, xmax = boxes[i]
+                x1 = int(xmin * input_img.shape[1] / resizing_factor_w)
+                y1 = int(ymin * input_img.shape[0] / resizing_factor_h)
+                x2 = int(xmax * input_img.shape[1] / resizing_factor_w)
+                y2 = int(ymax * input_img.shape[0] / resizing_factor_h)
+
+                class_id = int(classes[i])
+                class_name = labels[class_id]
+                score = scores[i]
+                label = f'{class_name}: {score:.2f}'
+
+                cv2.rectangle(output_img, (x1, y1), (x2, y2), color=(0, 0, 255), thickness=2)
+                (text_w, text_h), baseline = cv2.getTextSize(label, cv2.FONT_HERSHEY_SIMPLEX, 0.7, 2)
+                cv2.rectangle(output_img, (x1, y1 - text_h - baseline), (x1 + text_w, y1), (0, 0, 255), -1) # -1 thickness for filled
+                cv2.putText(output_img, label, (x1, y1 - 5), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 0), 2) # Black text
+
+    return output_img
+
+
+# mobilenet_model_path = "./models/mobilenet_ssd_latency_dynamic.tflite"
+mobilenet_model_path = "./models/mobilenet.tflite"
+efficientdet_model_path = "./models/efficientdet.tflite"
+# yolo_model_path = "models/yolo11n_float32.tflite"
+yolo_model_path = "./models/yolo11n_latency_dynamic.tflite"
+
+mobilenet_interpreter = tflite.Interpreter(model_path=mobilenet_model_path)
+mobilenet_interpreter.allocate_tensors()
+
+efficientdet_interpreter = tflite.Interpreter(model_path=efficientdet_model_path)
+efficientdet_interpreter.allocate_tensors()
+
+yolo_interpreter = tflite.Interpreter(model_path=yolo_model_path)
+yolo_interpreter.allocate_tensors()
 
 labels = load_labels('./models/coco_labels.txt')
 len(labels)
-print(labels[:20])
+# print(labels[:20])
 
+
+confidence = 0.5
 
 img_path = "./images/beatch.jpg"
-detect_objects(img_path, 0.5)
+original_img = cv2.imread(img_path)
+
+print("Running SSD-MobileNet V1 inference...")
+start_time = time.time()
+mobilenet_output = run_inference(original_img,
+                                 model='mobilenet',
+                                 interpreter=mobilenet_interpreter,
+                                 conf_threshold=confidence,
+                                 profiling=True)
+end_time = time.time()
+elapsed_time = (end_time - start_time) * 1000  # Convert to milliseconds
+print ("SSD-MobileNet-V1 end-to-end time: {:.1f}ms".format(elapsed_time))
+cv2.imshow("SSD-MobileNet V1", mobilenet_output)
+cv2.waitKey(0)  # Wait for a key press to close the window
+cv2.destroyAllWindows()
+
+
+print("Running EfficientDet inference...")
+start_time = time.time()
+efficientdet_output = run_inference(original_img,
+                                    model='efficientdet',
+                                    interpreter=efficientdet_interpreter,
+                                    conf_threshold=confidence,
+                                    profiling=True)
+end_time = time.time()
+elapsed_time = (end_time - start_time) * 1000  # Convert to milliseconds
+print ("EfficientDet end-to-end time: {:.1f}ms".format(elapsed_time))
+cv2.imshow("EfficientDet", efficientdet_output)
+cv2.waitKey(0)  # Wait for a key press to close the window
+cv2.destroyAllWindows()
+
+
+print("Running YOLO inference...")
+start_time = time.time()
+yolo_output = run_inference(original_img,
+                            model='yolo',
+                            interpreter=yolo_interpreter,
+                            conf_threshold=confidence,
+                            profiling=True)
+end_time = time.time()
+elapsed_time = (end_time - start_time) * 1000  # Convert to milliseconds
+print ("YOLO end-to-end time: {:.1f}ms".format(elapsed_time))
+cv2.imshow("YOLO", yolo_output)
+cv2.waitKey(0)  # Wait for a key press to close the window
+cv2.destroyAllWindows()
+
+
+# detect_objects(img_path, 0.5)
 
 
 # FOMO
@@ -273,3 +301,5 @@ detect_objects(img_path, 0.5)
 # plt.imshow(img_rgb)
 # plt.title("Original Image")
 # plt.show()
+
+
