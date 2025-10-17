@@ -206,7 +206,6 @@ marimo/_static/
 marimo/_lsp/
 __marimo__/
 
-
 # venv
 tinyml
 
@@ -221,3 +220,7 @@ efficientdet_d0_saved_model/
 
 ## mobilenet_ssd
 mobilenet_ssd_saved_model/
+
+
+models/
+images/
