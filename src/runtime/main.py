@@ -1,27 +1,52 @@
 
-from model import YoloModel
+from model import Model
 from camera import Camera
 import cv2
 import os
+import time
+from moviepy import *
+import numpy as np
 
 if __name__ == '__main__':
-    model = YoloModel(path='./data/models/yolo11n_latency_dynamic.tflite')
-
-
-    for filename in os.listdir('temp'):
-        file_path = os.path.join('temp', filename)
-        os.remove(file_path)
+    model = Model(model_type='yolo', path='./data/models/yolo11n_latency_dynamic.tflite')
+    # model = Model(model_type='fomo', path='./data/models/tinyml-linux-aarch64-v1-int8.eim')
     
     with Camera() as cam:
         i = 0
-        while True:
-            frame = cam.capture()
-            image = model.inference(frame)
+        frames = []
+        durations = []
+        try: 
+            while True:
+                frame = cam.capture()
 
-            if image is not None:
-                cv2.imwrite(f"temp/output{i}.jpg", image)
-                i += 1
-                print(f"Person detected! Saved output{i}.jpg")
-            
-            else:
-                print("No person detected in this frame.")
+
+                start_time = time.time()
+                
+                image = model.inference(frame)
+                end_time = time.time()
+                inference_time = (end_time - start_time)
+
+                
+                image = frame.copy() if image is None else image
+                image_path = f'temp/frame_{i}.jpg'
+                cv2.imwrite(image_path, image)
+                i+=1
+
+                frames.append(image_path)
+                durations.append(inference_time)
+
+
+        except KeyboardInterrupt:
+            print("Interrupted — building video...")
+
+
+
+
+        clip = ImageSequenceClip(frames, fps=1/np.mean(durations))
+        clip.write_videofile("temp/output_variable_timing.mp4", codec="libx264")
+
+        for filename in os.listdir('temp'):
+            file_path = os.path.join('temp', filename)
+            os.remove(file_path)
+
+
