@@ -8,10 +8,10 @@ class Camera:
 
   def __init__(self):
     self.picam2 = Picamera2()
-    picam2.preview_configuration.main.size = (640, 480)
-    picam2.preview_configuration.main.format = "RGB888"
-    picam2.preview_configuration.align()
-    picam2.configure("preview")
+    self.picam2.preview_configuration.main.size = (640, 480)
+    self.picam2.preview_configuration.main.format = "RGB888"
+    self.picam2.preview_configuration.align()
+    self.picam2.configure("preview")
 
   def __enter__(self):
     """Start the camera when entering the with-block."""
@@ -20,8 +20,9 @@ class Camera:
 
   def capture(self):
     """Capture a single frame and return it as a NumPy array."""
-    return picam2.capture_array()
-
+    frame = self.picam2.capture_array()
+    frame = cv2.flip(frame, -1)
+    return frame
 
   def __exit__(self, exception_type, exception_value, exception_traceback):
     self.picam2.stop()
