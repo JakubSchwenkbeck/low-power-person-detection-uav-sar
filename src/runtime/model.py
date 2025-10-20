@@ -25,7 +25,7 @@ class Model:
             self.interpreter.init()
 
 
-    def inference(self, image: np.ndarray):
+    def inference(self, image: np.ndarray, postprocess: bool = True):
         input_img = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
 
         if self.model_type == 'yolo':
@@ -38,13 +38,13 @@ class Model:
             self.interpreter.invoke()
             
             output_data = self.interpreter.get_tensor(self.interpreter_output_details['index'])
-            return self.postprocess(image, output_data)
-
+            if postprocess:
+                return self.postprocess(image, output_data)
         else:
             features, cropped = self.interpreter.get_features_from_image_auto_studio_settings(input_img)
             res = self.interpreter.classify(features)
-
-            return self.postprocess(image, res['result'])
+            if postprocess:
+                return self.postprocess(image, res['result'])
 
 
     def postprocess(self, image, output, conf_threshold=0.5, nms_threshold=0.45):

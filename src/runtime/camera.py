@@ -4,6 +4,41 @@ import time
 from picamera2 import Picamera2
 
 
+
+class FrameSource:
+    def __init__(self, path=None):
+        self.path = path
+        self.cap = None
+        self.cam_ctx = None
+
+    def __enter__(self):
+        if not self.path:
+            self.cam_ctx = Camera()
+            self.cam_ctx.__enter__()
+            return self
+        else:
+            self.cap = cv2.VideoCapture(self.path)
+            if not self.cap.isOpened():
+                raise RuntimeError(f"Cannot open video file: {self.path}")
+            return self
+
+    def capture(self):
+        if not self.path:
+            return self.cam_ctx.capture()
+        else:
+            ret, frame = self.cap.read()
+            if not ret:
+                return None
+            return frame
+
+    def __exit__(self, exc_type, exc, tb):
+        if not self.path and self.cam_ctx:
+            self.cam_ctx.__exit__(exc_type, exc, tb)
+        if self.cap:
+            self.cap.release()
+
+
+
 class Camera:
 
   def __init__(self):

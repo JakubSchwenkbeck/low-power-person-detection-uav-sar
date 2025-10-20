@@ -1,6 +1,6 @@
 
 from model import Model
-from camera import Camera
+from camera import FrameSource
 import cv2
 import os
 import time
@@ -8,16 +8,16 @@ from moviepy import *
 import numpy as np
 
 if __name__ == '__main__':
-    model = Model(model_type='yolo', path='./data/models/yolo11n_latency_dynamic.tflite')
-    # model = Model(model_type='fomo', path='./data/models/tinyml-linux-aarch64-v1-int8.eim')
+    # model = Model(model_type='yolo', path='./data/models/yolo11n_latency_dynamic.tflite')
+    model = Model(model_type='fomo', path='./data/models/tinyml-linux-aarch64-v1-int8.eim')
     
-    with Camera() as cam:
+    with FrameSource(path='data/images/remote_drone_footage.mp4') as src:
         i = 0
         frames = []
         durations = []
         try: 
             while True:
-                frame = cam.capture()
+                frame = src.capture()
 
 
                 start_time = time.time()
@@ -47,6 +47,7 @@ if __name__ == '__main__':
 
         for filename in os.listdir('temp'):
             file_path = os.path.join('temp', filename)
-            os.remove(file_path)
+            if file_path.endswith('.jpg'):
+                os.remove(file_path)    
 
 
