@@ -210,3 +210,9 @@ tinyml
 
 models/
 images/
+
+# Train
+train/runs/
+train/convert.py
+train/test.py
+train/yolo11n.pt 
