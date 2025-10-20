@@ -13,7 +13,7 @@ class Model:
         self.model_type = model_type
 
         if model_type == 'yolo':
-            self.interpreter = tflite.Interpreter(model_path=path)
+            self.interpreter = tflite.Interpreter(model_path=path, num_threads=4)
             self.interpreter.allocate_tensors()
 
             self.interpreter_input_details = self.interpreter.get_input_details()[0]

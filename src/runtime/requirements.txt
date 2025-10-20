@@ -9,3 +9,4 @@ edge_impulse_linux -i https://pypi.python.org/simple
 opencv-contrib-python
 pyaudio
 moviepy
+memory-profiler
