@@ -243,7 +243,8 @@ mobilenet_model_path = "./models/mobilenet_ssd_latency_dynamic.tflite"
 efficientdet_model_path = "./models/efficientdet.tflite"
 # yolo_model_path = "models/yolo11n_float32.tflite"
 # yolo_model_path = "./models/yolo11n_latency_dynamic.tflite"
-yolo_model_path = "./models/visdrone_float32.tflite"
+# yolo_model_path = "./models/c2a_best_float32.tflite"
+yolo_model_path = "./models/visdrone_480_best_float32.tflite"
 
 mobilenet_interpreter = tflite.Interpreter(model_path=mobilenet_model_path)
 mobilenet_interpreter.allocate_tensors()
@@ -256,8 +257,6 @@ yolo_interpreter.allocate_tensors()
 
 labels = load_labels('./models/coco_labels.txt')
 len(labels)
-# print(labels[:20])
-
 
 confidence = 0.3
 
@@ -346,8 +345,8 @@ try:
             break
         frame_count += 1
 
-        # if frame_count % 5 != 0:
-        #     continue
+        if frame_count % 10 != 0:
+            continue
 
         # cv2.imshow("Video", frame)
         # cv2.waitKey(1)
