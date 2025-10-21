@@ -1,0 +1,15 @@
+# manipal.yaml
+
+# Path to dataset root
+path: path/to/ManipalUAV
+train: train/images
+val: validation/images
+test: test/images
+
+
+# Number of classes
+nc: 1
+
+# Class names
+names:
+  0: person

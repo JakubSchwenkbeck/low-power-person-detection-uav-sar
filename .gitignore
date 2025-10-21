@@ -226,7 +226,14 @@ mobilenet_ssd_saved_model/
 
 
 # Train
-train/runs/
-train/convert.py
-train/test.py
-train/yolo11n.pt 
+src/train/runs/
+src/train/yolo11n.pt 
+data/images
+data/models
+
+conversion_venv
+runtime_venv
+
+.idea
+
+temp
