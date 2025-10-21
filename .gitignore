@@ -230,3 +230,12 @@ train/runs/
 train/convert.py
 train/test.py
 train/yolo11n.pt 
+data/images
+data/models
+
+conversion_venv
+runtime_venv
+
+.idea
+
+temp
