@@ -19,6 +19,7 @@ Activate it:
 source opt_venv/bin/activate
 ```
 
+Install requirements:
 ```
 pip install -r src/optimizing/requirements.txt
 ```
