@@ -1,0 +1,7 @@
+ipykernel
+numpy
+matplotlib
+Pillow
+ultralytics
+tensorflow
+opencv-contrib-python
