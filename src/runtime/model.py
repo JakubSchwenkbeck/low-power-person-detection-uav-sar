@@ -22,6 +22,8 @@ class Model:
             self.interpreter_input_details = self.interpreter.get_input_details()[0]
             self.interpreter_output_details = self.interpreter.get_output_details()[0]
 
+            print(self.interpreter_input_details)
+
             self.input_size = (self.interpreter_input_details['shape'][1], self.interpreter_input_details['shape'][2])
         else:
             self.interpreter = ImageImpulseRunner(path)

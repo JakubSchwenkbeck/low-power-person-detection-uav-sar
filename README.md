@@ -30,18 +30,18 @@ pip install -r src/optimizing/requirements.txt
 Create a Python (3.11) virtual environment that includes the system site packages for picamera2 support:
 
 ```bash
-python3 -m venv --system-site-packages runtime_venv
+python3 -m venv --system-site-packages venv
 ```
 
 Activate it:
 
 ```bash
-source runtime_venv/bin/activate
+source venv/bin/activate
 ```
 
 Install requirements and force reinstall for incompatible system site packages:
 
 ```bash
-pip install --force-reinstall -r src/runtime/requirements.txt
+pip install -r requirements.txt
 ```
 

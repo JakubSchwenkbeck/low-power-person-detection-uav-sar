@@ -1,6 +1,6 @@
-
 from model import Model
 from camera import FrameSource
+
 import cv2
 import os
 import time

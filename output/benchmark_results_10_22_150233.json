@@ -1,0 +1,47 @@
+{
+    "images_amount": 50,
+    "results": {
+        "yolo11n_float32.tflite": {
+            "inference_time (ms)": 132.35880851745605,
+            "memory_usage (MiB)": 194.14172916666666,
+            "cpu_temperature (C)": 66.34,
+            "cpu_usage (%)": 88.00200000000001,
+            "energy_consumption (W)": 3.70005
+        },
+        "yolo11n_dynamic_int8_default.tflite": {
+            "inference_time (ms)": 285.30309677124023,
+            "memory_usage (MiB)": 168.1875,
+            "cpu_temperature (C)": 65.428,
+            "cpu_usage (%)": 84.024,
+            "energy_consumption (W)": 3.6006
+        },
+        "yolo11n_visdrone_int8.tflite": {
+            "inference_time (ms)": 265.0044298171997,
+            "memory_usage (MiB)": 171.890625,
+            "cpu_temperature (C)": 63.66,
+            "cpu_usage (%)": 84.348,
+            "energy_consumption (W)": 3.6087000000000007
+        },
+        "yolo11n_float16_experimental.tflite": {
+            "inference_time (ms)": 129.60520267486572,
+            "memory_usage (MiB)": 209.075,
+            "cpu_temperature (C)": 70.16199999999999,
+            "cpu_usage (%)": 88.804,
+            "energy_consumption (W)": 3.7201000000000004
+        },
+        "yolo11n_float16_default.tflite": {
+            "inference_time (ms)": 124.91156578063965,
+            "memory_usage (MiB)": 209.7234375,
+            "cpu_temperature (C)": 72.998,
+            "cpu_usage (%)": 88.462,
+            "energy_consumption (W)": 3.71155
+        },
+        "yolo11n_dynamic_int8_experimental.tflite": {
+            "inference_time (ms)": 278.90387058258057,
+            "memory_usage (MiB)": 207.5,
+            "cpu_temperature (C)": 67.20400000000001,
+            "cpu_usage (%)": 83.97200000000001,
+            "energy_consumption (W)": 3.5992999999999995
+        }
+    }
+}
