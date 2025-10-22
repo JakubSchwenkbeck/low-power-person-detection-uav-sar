@@ -1,4 +1,4 @@
-from src.runtime.model import Model
+from model import Model
 import os
 import cv2
 import time
@@ -81,3 +81,6 @@ def benchmark(model_path: str, amount_of_images):
         'cpu_usage (%)': np.mean(cpu_usage_values),
         'energy_consumption (W)': np.mean(energy_values)
     }
+
+if __name__ == '__main__':
+    run()
