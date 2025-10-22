@@ -1,6 +1,6 @@
+from src.runtime.model import Model
+from src.runtime.camera import FrameSource
 
-from model import Model
-from camera import FrameSource
 import cv2
 import os
 import time
