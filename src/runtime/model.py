@@ -13,7 +13,10 @@ class Model:
         self.model_type = model_type
 
         if model_type == 'yolo':
-            self.interpreter = tflite.Interpreter(model_path=path, num_threads=4)
+            self.interpreter = tflite.Interpreter(
+                model_path=path,
+                num_threads=4,
+            )
             self.interpreter.allocate_tensors()
 
             self.interpreter_input_details = self.interpreter.get_input_details()[0]
@@ -33,6 +36,12 @@ class Model:
             input_img = input_img.astype(np.float32) / 255.0
 
             input_data = np.expand_dims(input_img, axis=0)
+
+            if self.interpreter_input_details['dtype'] == np.int8:
+                scale, zero_point = self.interpreter_input_details['quantization']
+                input_data = input_data / 255.0
+                input_data = input_data / scale + zero_point
+                input_data = np.clip(input_data, -128, 127).astype(np.int8)
 
             self.interpreter.set_tensor(self.interpreter_input_details['index'], input_data)
             self.interpreter.invoke()

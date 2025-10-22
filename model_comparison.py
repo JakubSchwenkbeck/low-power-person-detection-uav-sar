@@ -172,7 +172,12 @@ def run_inference(image: np.ndarray,
         num_detections = int(interpreter.get_tensor(interpreter.get_output_details()[3]['index'])[0])
 
     # Create the output image
-    output_img = image.copy()
+    # output_img = image.copy()
+    output_img = input_img.copy()
+    output_img = cv2.cvtColor(output_img, cv2.COLOR_RGB2BGR)
+
+    if output_img.dtype != 'uint8':
+        output_img = np.clip(output_img * 255, 0, 255).astype('uint8')
 
     # Draw bounding boxes on the ORIGINAL image
     if model in ['yolo']:
@@ -180,17 +185,22 @@ def run_inference(image: np.ndarray,
 
             class_id = int(det['class_id'])
 
-            # if class_id not in [0,1]:
-            #     continue
+            if class_id not in [0,1]:
+                continue
 
             # Bbox is [center_x, center_y, width, height] normalized to model input size
             center_x_norm, center_y_norm, w_norm, h_norm = det['bbox']
 
             # Scale coordinates to original image size
-            box_w = int(w_norm * input_img.shape[1] / resizing_factor_w)
-            box_h = int(h_norm * input_img.shape[0] / resizing_factor_h)
-            center_x = int(center_x_norm * input_img.shape[1] / resizing_factor_w)
-            center_y = int(center_y_norm * input_img.shape[0] / resizing_factor_h)
+            # box_w = int(w_norm * input_img.shape[1] / resizing_factor_w)
+            # box_h = int(h_norm * input_img.shape[0] / resizing_factor_h)
+            # center_x = int(center_x_norm * input_img.shape[1] / resizing_factor_w)
+            # center_y = int(center_y_norm * input_img.shape[0] / resizing_factor_h)
+
+            box_w = int(w_norm * input_img.shape[1])
+            box_h = int(h_norm * input_img.shape[0])
+            center_x = int(center_x_norm * input_img.shape[1])
+            center_y = int(center_y_norm * input_img.shape[0])
 
             # box_w = int(w_norm / resizing_factor_w)
             # box_h = int(h_norm / resizing_factor_h)
@@ -211,10 +221,11 @@ def run_inference(image: np.ndarray,
             # Prepare the label text
             class_name = labels[class_id]
             score = det['score']
-            label = f'{class_name}: {score:.2f}'
+            # label = f'{class_name}: {score:.2f}'
+            label = f'{class_id}: {score:.2f}'
 
             # Draw the label text above the box
-            cv2.putText(output_img, label, (x1, y1 - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 255), 2)
+            cv2.putText(output_img, label, (x1, y1 - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 255), 1)
     elif model in ['mobilenet', 'efficientdet']:
         
         for i in range(num_detections):
@@ -228,29 +239,30 @@ def run_inference(image: np.ndarray,
                 class_id = int(classes[i])
                 class_name = labels[class_id]
                 score = scores[i]
-                label = f'{class_name}: {score:.2f}'
+                # label = f'{class_name}: {score:.2f}'
+                label = f'{class_id}: {score:.2f}'
 
                 cv2.rectangle(output_img, (x1, y1), (x2, y2), color=(0, 0, 255), thickness=2)
                 (text_w, text_h), baseline = cv2.getTextSize(label, cv2.FONT_HERSHEY_SIMPLEX, 0.7, 2)
-                cv2.rectangle(output_img, (x1, y1 - text_h - baseline), (x1 + text_w, y1), (0, 0, 255), -1) # -1 thickness for filled
-                cv2.putText(output_img, label, (x1, y1 - 5), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 0), 2) # Black text
+                cv2.rectangle(output_img, (x1, y1 - text_h - baseline), (x1 + text_w, y1), (0, 0, 255), -1)
+                cv2.putText(output_img, label, (x1, y1 - 5), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 0), 1)
 
     return output_img
 
 
 # mobilenet_model_path = "./models/mobilenet_ssd_latency_dynamic.tflite"
-mobilenet_model_path = "./models/mobilenet_ssd_latency_dynamic.tflite"
-efficientdet_model_path = "./models/efficientdet.tflite"
+# mobilenet_model_path = "./models/mobilenet_ssd_latency_dynamic.tflite"
+# efficientdet_model_path = "./models/efficientdet.tflite"
 # yolo_model_path = "models/yolo11n_float32.tflite"
 # yolo_model_path = "./models/yolo11n_latency_dynamic.tflite"
 # yolo_model_path = "./models/c2a_best_float32.tflite"
-yolo_model_path = "./models/visdrone_480_best_float32.tflite"
+yolo_model_path = "./models/visdrone_float16.tflite"
 
-mobilenet_interpreter = tflite.Interpreter(model_path=mobilenet_model_path)
-mobilenet_interpreter.allocate_tensors()
+# mobilenet_interpreter = tflite.Interpreter(model_path=mobilenet_model_path)
+# mobilenet_interpreter.allocate_tensors()
 
-efficientdet_interpreter = tflite.Interpreter(model_path=efficientdet_model_path)
-efficientdet_interpreter.allocate_tensors()
+# efficientdet_interpreter = tflite.Interpreter(model_path=efficientdet_model_path)
+# efficientdet_interpreter.allocate_tensors()
 
 yolo_interpreter = tflite.Interpreter(model_path=yolo_model_path)
 yolo_interpreter.allocate_tensors()
@@ -258,10 +270,10 @@ yolo_interpreter.allocate_tensors()
 labels = load_labels('./models/coco_labels.txt')
 len(labels)
 
-confidence = 0.3
+confidence = 0.4
 
-img_path = "./images/beatch.jpg"
-original_img = cv2.imread(img_path)
+# img_path = "./images/beatch.jpg"
+# original_img = cv2.imread(img_path)
 
 
 # print("Running SSD-MobileNet V1 inference...")
@@ -294,19 +306,19 @@ original_img = cv2.imread(img_path)
 # cv2.destroyAllWindows()
 
 
-print("Running YOLO inference...")
-start_time = time.time()
-yolo_output = run_inference(original_img,
-                            model='yolo',
-                            interpreter=yolo_interpreter,
-                            conf_threshold=confidence,
-                            profiling=True)
-end_time = time.time()
-elapsed_time = (end_time - start_time) * 1000  # Convert to milliseconds
-print ("YOLO end-to-end time: {:.1f}ms".format(elapsed_time))
-cv2.imshow("YOLO", yolo_output)
-cv2.waitKey(0)  # Wait for a key press to close the window
-cv2.destroyAllWindows()
+# print("Running YOLO inference...")
+# start_time = time.time()
+# yolo_output = run_inference(original_img,
+#                             model='yolo',
+#                             interpreter=yolo_interpreter,
+#                             conf_threshold=confidence,
+#                             profiling=True)
+# end_time = time.time()
+# elapsed_time = (end_time - start_time) * 1000  # Convert to milliseconds
+# print ("YOLO end-to-end time: {:.1f}ms".format(elapsed_time))
+# cv2.imshow("YOLO", yolo_output)
+# cv2.waitKey(0)  # Wait for a key press to close the window
+# cv2.destroyAllWindows()
 
 
 # detect_objects(img_path, 0.5)
@@ -329,8 +341,16 @@ cv2.destroyAllWindows()
 # plt.show()
 
 
-video_path = "/media/gabriele/Data/remote_drone_footage.mp4"
+# video_path = "/media/gabriele/Data/remote_drone_footage.mp4"
 # video_path = "/media/gabriele/Data/water_rescue_drone_footage.mp4"
+# video_path = "/mnt/usb-Realtek_RTL9210B-CG_012345679039-0:0-part2/videos/city_uav_footage_edited.mp4"
+video_path = "/mnt/usb-Realtek_RTL9210B-CG_012345679039-0:0-part2/videos/remote_drone_footage.mp4"
+output_video_path = "output.mp4"
+fps = 5.0
+frame_height, frame_width = 640,640
+fourcc = cv2.VideoWriter_fourcc(*'mp4v')
+out = cv2.VideoWriter(output_video_path, fourcc, fps, (frame_width, frame_height))
+
 
 cap = cv2.VideoCapture(video_path)
 if not cap.isOpened():
@@ -345,7 +365,7 @@ try:
             break
         frame_count += 1
 
-        if frame_count % 10 != 0:
+        if frame_count % 6 != 0:
             continue
 
         # cv2.imshow("Video", frame)
@@ -360,10 +380,13 @@ try:
         end_time = time.time()
         elapsed_time = (end_time - start_time) * 1000  # Convert to milliseconds
         print ("YOLO end-to-end time: {:.1f}ms".format(elapsed_time))
+        
         cv2.imshow("YOLO", yolo_output)
-        cv2.waitKey(10)
+        out.write(yolo_output)  
+        cv2.waitKey(1)
 
 
 finally:
     cap.release()
+    out.release()
     cv2.destroyAllWindows()

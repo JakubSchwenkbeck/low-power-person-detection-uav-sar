@@ -1,7 +1,7 @@
 import numpy as np
 import cv2
 import time
-from picamera2 import Picamera2
+# from picamera2 import Picamera2
 
 
 

@@ -9,9 +9,12 @@ import numpy as np
 
 if __name__ == '__main__':
     # model = Model(model_type='yolo', path='./data/models/yolo11n_latency_dynamic.tflite')
-    model = Model(model_type='fomo', path='./data/models/tinyml-linux-aarch64-v1-int8.eim')
+    model = Model(model_type='yolo', path='../models/best_yolo11n_visdrone_int8.tflite')
+    # model = Model(model_type='fomo', path='./data/models/tinyml-linux-aarch64-v1-int8.eim')
     
-    with FrameSource(path='data/images/remote_drone_footage.mp4') as src:
+    video_path = "/home/gabriele/Desktop/temp/remote_drone_footage.mp4"
+
+    with FrameSource(path=video_path) as src:
         i = 0
         frames = []
         durations = []
