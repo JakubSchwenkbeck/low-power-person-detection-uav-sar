@@ -1,0 +1,54 @@
+{
+    "images_amount": 50,
+    "results": {
+        "yolo11n_latency_dynamic.tflite": {
+            "inference_time (ms)": 786.2371444702148,
+            "memory_usage (MiB)": 160.5142734375,
+            "cpu_temperature (C)": 84.05,
+            "cpu_usage (%)": 82.786,
+            "energy_consumption (W)": 3.569650000000001
+        },
+        "yolo11n_latency_float32.tflite": {
+            "inference_time (ms)": 799.4361448287964,
+            "memory_usage (MiB)": 163.30109375,
+            "cpu_temperature (C)": 84.36,
+            "cpu_usage (%)": 83.074,
+            "energy_consumption (W)": 3.57685
+        },
+        "yolo11n_float32.tflite": {
+            "inference_time (ms)": 671.6950750350952,
+            "memory_usage (MiB)": 191.60633522727272,
+            "cpu_temperature (C)": 84.71,
+            "cpu_usage (%)": 91.71800000000002,
+            "energy_consumption (W)": 3.7929499999999994
+        },
+        "yolo11n_size_float16.tflite": {
+            "inference_time (ms)": 656.8959140777588,
+            "memory_usage (MiB)": 203.77748437499997,
+            "cpu_temperature (C)": 84.6,
+            "cpu_usage (%)": 92.41,
+            "energy_consumption (W)": 3.81025
+        },
+        "yolo11n_size_dynamic.tflite": {
+            "inference_time (ms)": 831.691255569458,
+            "memory_usage (MiB)": 202.2421875,
+            "cpu_temperature (C)": 84.33,
+            "cpu_usage (%)": 82.738,
+            "energy_consumption (W)": 3.56845
+        },
+        "yolo11n_latency_float16.tflite": {
+            "inference_time (ms)": 664.9427127838135,
+            "memory_usage (MiB)": 204.9671875,
+            "cpu_temperature (C)": 84.69,
+            "cpu_usage (%)": 92.33400000000002,
+            "energy_consumption (W)": 3.808349999999999
+        },
+        "yolo11n_size_float32.tflite": {
+            "inference_time (ms)": 727.1428155899048,
+            "memory_usage (MiB)": 203.21484375,
+            "cpu_temperature (C)": 82.45,
+            "cpu_usage (%)": 83.574,
+            "energy_consumption (W)": 3.5893500000000005
+        }
+    }
+}

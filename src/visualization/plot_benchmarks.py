@@ -10,7 +10,7 @@ sns.set_theme(style="whitegrid")
 
 if __name__ == '__main__':
 
-    JSON_PATH = 'output/benchmark_results_10_22_154343.json'  # Relative to project root
+    JSON_PATH = 'output/benchmarks/benchmark_results_10_22_154343.json'  # Relative to project root
 
     with open(JSON_PATH, 'r') as f:
         data = json.load(f)
