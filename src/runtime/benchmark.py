@@ -9,7 +9,6 @@ from tqdm import tqdm
 import json
 from datetime import datetime
 
-AMOUNT_OF_IMAGES = 50
 MODEL_PATH = 'data/models'
 IMAGES_PATH = 'data/images/val2017'
 
@@ -19,9 +18,9 @@ P_max = 4.0
 timestamp = datetime.now().strftime("%m_%d_%H%M%S")
 OUTPUT_FILE = f'output/benchmark_results_{timestamp}.json'
 
-def main():
+def run(amount_of_images=50):
     results = {
-        'images_amount': AMOUNT_OF_IMAGES,
+        'images_amount': amount_of_images,
         'results': {
         }
     }
@@ -30,7 +29,7 @@ def main():
         file_path = os.path.join(MODEL_PATH, model)
         if file_path.endswith('.tflite') and get_model_type(file_path):
             print(f'Benchmarking model: {model}')
-            results['results'][model] = benchmark(file_path)
+            results['results'][model] = benchmark(file_path, amount_of_images)
             with open(OUTPUT_FILE, 'w') as f:
                 json.dump(results, f, indent=4)
 
@@ -46,7 +45,7 @@ def get_CPU_temp():
     res = os.popen('vcgencmd measure_temp').readline()
     return float(res.replace("temp=","").replace("'C\n",""))
 
-def benchmark(model_path: str):
+def benchmark(model_path: str, amount_of_images):
     model_type = get_model_type(model_path)
     model = Model(model_type=model_type, path=model_path)
 
@@ -56,7 +55,7 @@ def benchmark(model_path: str):
     cpu_usage_values = []
     energy_values = []
     
-    for image in tqdm(os.listdir(IMAGES_PATH)[:AMOUNT_OF_IMAGES]):
+    for image in tqdm(os.listdir(IMAGES_PATH)[:amount_of_images]):
         image_path = os.path.join(IMAGES_PATH, image)
         img = cv2.imread(image_path)
 
@@ -83,6 +82,5 @@ def benchmark(model_path: str):
         'energy_consumption (W)': np.mean(energy_values)
     }
 
-
-
-main()
+if __name__ == '__main__':
+    run()
