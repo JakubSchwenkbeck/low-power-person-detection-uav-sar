@@ -33,7 +33,7 @@ if __name__ == '__main__':
             return 'float16'
         if 'dynamic' in name:
             return 'dynamic'
-        return 'other'
+        return 'full_quant'
 
     def get_variant(name: str) -> str:
         name = name.lower()
@@ -47,19 +47,19 @@ if __name__ == '__main__':
     df['variant'] = df['model_file'].apply(get_variant)
 
     #  float32 -> float16 -> dynamic -> other
-    group_order = ['float32', 'float16', 'dynamic', 'other']
+    group_order = ['float32', 'float16', 'dynamic', 'full_quant']
     variant_order = ['base', 'latency', 'size']
     df['_g'] = pd.Categorical(df['group'], categories=group_order, ordered=True)
     df['_v'] = pd.Categorical(df['variant'], categories=variant_order, ordered=True)
     df_sorted = df.sort_values(by=['_g', '_v', 'model_file']).reset_index(drop=True)
 
     # Color palette per group
-    base_palette = sns.color_palette('Set2', 3) 
+    base_palette = sns.color_palette('Set2', 4) 
     palette_map = {
         'float32': base_palette[0],
         'float16': base_palette[1],
         'dynamic': base_palette[2],
-        'other': (0.6, 0.6, 0.6),  #  fallback
+        'full_quant': base_palette[3]
     }
 
     output_dir = 'output/plots'
