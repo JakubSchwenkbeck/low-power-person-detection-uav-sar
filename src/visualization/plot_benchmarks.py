@@ -46,7 +46,7 @@ if __name__ == '__main__':
     df['group'] = df['model_file'].apply(get_group)
     df['variant'] = df['model_file'].apply(get_variant)
 
-    #  float32 -> float16 -> dynamic -> other
+    #  float32 -> float16 -> dynamic -> full_quant
     group_order = ['float32', 'float16', 'dynamic', 'full_quant']
     variant_order = ['base', 'latency', 'size']
     df['_g'] = pd.Categorical(df['group'], categories=group_order, ordered=True)

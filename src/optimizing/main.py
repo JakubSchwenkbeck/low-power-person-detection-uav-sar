@@ -13,20 +13,26 @@ def main():
     model_name_ext = "yolo11n.pt"
     yolo_saved_model_path = load_yolo(model_name, model_name_ext)
 
-    #mobilenet_ssd_saved_model_path = load_mobilenet_ssd("mobilenet_ssd")
 
-    #efficientdet_saved_model_path = load_efficientdet("efficientdet_d0")
 
     if os.path.exists(yolo_saved_model_path):
 
         optimize_model(model_name, yolo_saved_model_path)
 
+
+
+    # Optional: export and optimize mobilenet-ssd and efficientdet TF-Hub baselines
+
+
+    #mobilenet_ssd_saved_model_path = load_mobilenet_ssd("mobilenet_ssd")
+
     #if os.path.exists(mobilenet_ssd_saved_model_path):
-#
     #    optimize_model("mobilenet_ssd", mobilenet_ssd_saved_model_path)
-#
+
+
+    #efficientdet_saved_model_path = load_efficientdet("efficientdet_d0")
+    
     #if os.path.exists(efficientdet_saved_model_path):
-#
     #    optimize_model("efficientdet_d0", efficientdet_saved_model_path)
     
 
