@@ -2,6 +2,10 @@
 
 Low-Power Person Detection for UAV Search and Rescue Operations
 
+
+https://github.com/user-attachments/assets/8252d80d-e621-4c57-8b4e-a60b99bf5c8f
+
+
 ## Instructions
 
 
