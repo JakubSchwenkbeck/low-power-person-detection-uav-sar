@@ -1,6 +1,6 @@
 tflite_runtime
 ipykernel
-numpy==1.25
+numpy==1.26.4
 matplotlib
 Pillow
 ultralytics

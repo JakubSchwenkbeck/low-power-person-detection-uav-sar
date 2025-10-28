@@ -39,18 +39,18 @@ class Model:
 
             input_data = np.expand_dims(input_img, axis=0)
 
-            if self.interpreter_input_details['dtype'] == np.int8:
-                scale, zero_point = self.interpreter_input_details['quantization']
-                input_data = input_data / 255.0
-                input_data = input_data / scale + zero_point
-                input_data = np.clip(input_data, -128, 127).astype(np.int8)
+            # if self.interpreter_input_details['dtype'] == np.int8:
+            #     scale, zero_point = self.interpreter_input_details['quantization']
+            #     input_data = input_data / 255.0
+            #     input_data = input_data / scale + zero_point
+            #     input_data = np.clip(input_data, -128, 127).astype(np.int8)
 
             self.interpreter.set_tensor(self.interpreter_input_details['index'], input_data)
             self.interpreter.invoke()
             
             output_data = self.interpreter.get_tensor(self.interpreter_output_details['index'])
             if postprocess:
-                return self.postprocess(image, output_data)
+                return self.postprocess(image, output_data, conf_threshold=0.5, nms_threshold=0.45)
         else:
             features, cropped = self.interpreter.get_features_from_image_auto_studio_settings(input_img)
             res = self.interpreter.classify(features)
@@ -87,19 +87,22 @@ class Model:
 
         if len(results) == 0:
             return None
+        
+        img_height, img_width, _ = image.shape
 
         for result in results:
             x, y, w, h, score = result
-            x1, y1, x2, y2 = int(x - w/2), int(y - h/2), int(x + w/2), int(y + h/2)
+            x1 = int(x * img_width - w * img_width / 2)
+            y1 = int(y * img_height - h * img_height / 2)
+            x2 = int(x * img_width + w * img_width / 2)
+            y2 = int(y * img_height + h * img_height / 2)
 
             cv2.rectangle(image, (x1, y1), (x2, y2), (255, 0, 0), 2)
 
-            font = cv2.FONT_HERSHEY_SIMPLEX
-            font_scale = 0.5
-            font_thickness = 1
-
-            cv2.putText(image, str(score), (x1 + 10, y1 + 20), font, font_scale, (255, 255, 255), font_thickness, lineType=cv2.LINE_AA)
-
+            cv2.putText(image, 
+                        str(score),
+                        (x1, y1 - 10),
+                        cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 1, lineType=cv2.LINE_AA)
 
         return image
 
