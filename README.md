@@ -18,7 +18,9 @@ This repository is organized as follows:
 
 
 For a quick idea what we wanted to do, take a look at this demo video:
-[Project Demo](https://github.com/user-attachments/assets/02fc9ed3-450b-45ba-8a88-bcdbbf37bd96)
+
+https://github.com/user-attachments/assets/02fc9ed3-450b-45ba-8a88-bcdbbf37bd96
+
 
 
 
