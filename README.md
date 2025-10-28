@@ -1,10 +1,11 @@
-# low-power-person-detection-uav-sar
+# Low-Power Person Detection for UAV Search and Rescue Operations
 
-Low-Power Person Detection for UAV Search and Rescue Operations
+This repository contains the code and documentation for the `Low-Power Person Detection for UAV Search and Rescue Operations` project in TinyML for the Stockholm University by [Gabriele Pattarozzi](https://github.com/gpatta), [Timon Coucke](https://github.com/LGDTimtou) and [Jakub Schwenkbeck](https://github.com/JakubSchwenkbeck)
 
 
 
-https://github.com/user-attachments/assets/c39b535d-a092-4095-b137-317e074b95ed
+
+[Project Demo](https://github.com/user-attachments/assets/02fc9ed3-450b-45ba-8a88-bcdbbf37bd96)
 
 
 
