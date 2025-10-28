@@ -24,7 +24,6 @@ Install requirements:
 pip install -r src/optimizing/requirements.txt
 ```
 
-
 ### Model Runtime
 
 Create a Python (3.11) virtual environment that includes the system site packages for picamera2 support:

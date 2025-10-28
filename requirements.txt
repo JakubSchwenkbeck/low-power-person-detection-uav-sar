@@ -1,10 +1,11 @@
-tflite_runtime
+tensorflow
+tensorflow_hub
+# tflite_runtime
 ipykernel
 numpy==1.26.4
 matplotlib
 Pillow
 ultralytics
-tensorflow
 edge_impulse_linux -i https://pypi.python.org/simple
 opencv-contrib-python
 pyaudio

@@ -6,14 +6,13 @@ import os
 import time
 from moviepy import *
 import numpy as np
+import argparse
+import sys
 
-if __name__ == '__main__':
-    # model = Model(model_type='yolo', path='./data/models/yolo11n_latency_dynamic.tflite')
-    model = Model(model_type='yolo', path='models/yolo11n_visdrone_640p_100ep/weights/best_saved_model/best_float16.tflite')
-    # model = Model(model_type='fomo', path='./data/models/tinyml-linux-aarch64-v1-int8.eim')
-    
-    video_path = ""
-    output_video_path = "output/videos/output.mp4"
+
+def run(model_path: str, video_path: str, output_video_path: str):
+
+    model = Model(model_type='yolo', path=model_path)
 
     with FrameSource(path=video_path) as src:
         i = 0
@@ -43,9 +42,7 @@ if __name__ == '__main__':
 
         except:
             print("Interrupted — building video...")
-
-
-
+        
 
         clip = ImageSequenceClip(frames, fps=1/np.mean(durations))
         clip.write_videofile(output_video_path, codec="libx264")
@@ -56,3 +53,16 @@ if __name__ == '__main__':
                 os.remove(file_path)    
 
 
+def main(argv=None):
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument("model-path", help="Path to the model file")
+    parser.add_argument("video-path", help="Path to the input video file")
+    parser.add_argument("output-video-path", help="Path to the output video file")
+
+    args = parser.parse_args(argv)
+
+    run(args.model_path, args.video_path, args.output_video_path)
+
+if __name__ == '__main__':
+    main(sys.argv[1:])
