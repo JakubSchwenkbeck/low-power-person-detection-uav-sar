@@ -253,10 +253,7 @@ def run_inference(image: np.ndarray,
 # mobilenet_model_path = "./models/mobilenet_ssd_latency_dynamic.tflite"
 # mobilenet_model_path = "./models/mobilenet_ssd_latency_dynamic.tflite"
 # efficientdet_model_path = "./models/efficientdet.tflite"
-# yolo_model_path = "models/yolo11n_float32.tflite"
-# yolo_model_path = "./models/yolo11n_latency_dynamic.tflite"
-# yolo_model_path = "./models/c2a_best_float32.tflite"
-yolo_model_path = "./models/visdrone_float16.tflite"
+yolo_model_path = "models/yolo11n_visdrone_640p_100ep/weights/best_saved_model/best_float16.tflite"
 
 # mobilenet_interpreter = tflite.Interpreter(model_path=mobilenet_model_path)
 # mobilenet_interpreter.allocate_tensors()
@@ -267,8 +264,9 @@ yolo_model_path = "./models/visdrone_float16.tflite"
 yolo_interpreter = tflite.Interpreter(model_path=yolo_model_path)
 yolo_interpreter.allocate_tensors()
 
-labels = load_labels('./models/coco_labels.txt')
-len(labels)
+# labels = load_labels('./models/coco_labels.txt')
+# len(labels)
+labels = ['person']
 
 confidence = 0.4
 
@@ -341,12 +339,9 @@ confidence = 0.4
 # plt.show()
 
 
-# video_path = "/media/gabriele/Data/remote_drone_footage.mp4"
-# video_path = "/media/gabriele/Data/water_rescue_drone_footage.mp4"
-# video_path = "/mnt/usb-Realtek_RTL9210B-CG_012345679039-0:0-part2/videos/city_uav_footage_edited.mp4"
-video_path = "/mnt/usb-Realtek_RTL9210B-CG_012345679039-0:0-part2/videos/remote_drone_footage.mp4"
-output_video_path = "output.mp4"
-fps = 5.0
+video_path = ""
+output_video_path = "output/videos/output.mp4"
+fps = 3.0
 frame_height, frame_width = 640,640
 fourcc = cv2.VideoWriter_fourcc(*'mp4v')
 out = cv2.VideoWriter(output_video_path, fourcc, fps, (frame_width, frame_height))
@@ -365,11 +360,8 @@ try:
             break
         frame_count += 1
 
-        if frame_count % 6 != 0:
+        if frame_count % 10 != 0:
             continue
-
-        # cv2.imshow("Video", frame)
-        # cv2.waitKey(1)
 
         start_time = time.time()
         yolo_output = run_inference(frame,
@@ -384,7 +376,6 @@ try:
         cv2.imshow("YOLO", yolo_output)
         out.write(yolo_output)  
         cv2.waitKey(1)
-
 
 finally:
     cap.release()

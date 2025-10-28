@@ -237,3 +237,6 @@ runtime_venv
 .idea
 
 temp
+
+output/videos/
+videos/

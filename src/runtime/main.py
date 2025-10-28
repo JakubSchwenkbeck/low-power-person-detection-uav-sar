@@ -6,13 +6,13 @@ import os
 import time
 from moviepy import *
 import numpy as np
+import argparse
+import sys
 
-if __name__ == '__main__':
-    # model = Model(model_type='yolo', path='./data/models/yolo11n_latency_dynamic.tflite')
-    model = Model(model_type='yolo', path='../models/best_yolo11n_visdrone_int8.tflite')
-    # model = Model(model_type='fomo', path='./data/models/tinyml-linux-aarch64-v1-int8.eim')
-    
-    video_path = "/home/gabriele/Desktop/temp/remote_drone_footage.mp4"
+
+def run(model_path: str, video_path: str, output_video_path: str):
+
+    model = Model(model_type='yolo', path=model_path)
 
     with FrameSource(path=video_path) as src:
         i = 0
@@ -22,13 +22,12 @@ if __name__ == '__main__':
             while True:
                 frame = src.capture()
 
-
                 start_time = time.time()
-                
                 image = model.inference(frame)
                 end_time = time.time()
                 inference_time = (end_time - start_time)
 
+                # print(f"Inference time: {inference_time*1000:.2f} ms")
                 
                 image = frame.copy() if image is None else image
                 image_path = f'temp/frame_{i}.jpg'
@@ -38,15 +37,15 @@ if __name__ == '__main__':
                 frames.append(image_path)
                 durations.append(inference_time)
 
+                cv2.imshow("YOLO", image)
+                cv2.waitKey(1)
 
-        except KeyboardInterrupt:
+        except:
             print("Interrupted — building video...")
-
-
-
+        
 
         clip = ImageSequenceClip(frames, fps=1/np.mean(durations))
-        clip.write_videofile("temp/output_variable_timing.mp4", codec="libx264")
+        clip.write_videofile(output_video_path, codec="libx264")
 
         for filename in os.listdir('temp'):
             file_path = os.path.join('temp', filename)
@@ -54,3 +53,16 @@ if __name__ == '__main__':
                 os.remove(file_path)    
 
 
+def main(argv=None):
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument("model_path", help="Path to the model file")
+    parser.add_argument("video_path", help="Path to the input video file")
+    parser.add_argument("output_video_path", help="Path to the output video file")
+
+    args = parser.parse_args(argv)
+
+    run(args.model_path, args.video_path, args.output_video_path)
+
+if __name__ == '__main__':
+    main(sys.argv[1:])

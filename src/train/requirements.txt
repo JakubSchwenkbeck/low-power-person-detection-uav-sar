@@ -2,3 +2,5 @@ ultralytics
 onnx2tf
 onnx_graphsurgeon
 sng4onnx
+tf_keras
+ai_edge_litert
