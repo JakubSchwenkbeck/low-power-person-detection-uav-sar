@@ -4,7 +4,20 @@ This repository contains the code and documentation for the `Low-Power Person De
 
 
 
+This repository is organized as follows:
 
+- documents/ - project plan and report
+- output/ - benchmarking results and plots
+- models/ - final trained models and exported artifacts
+- src/ - source code:
+  - src/optimizing/ - model optimization scripts 
+  - src/training/ - training code and dataset preparation
+  - src/visualization/ - plotting and visualization utilities
+  - src/runtime/ - inference/runtime code for deployment on Hardware
+- notebooks/pipeline.ipynb - comprehensive pipeline walkthrough (model loading → training → optimization → benchmarking).
+
+
+For a quick idea what we wanted to do, take a look at this demo video:
 [Project Demo](https://github.com/user-attachments/assets/02fc9ed3-450b-45ba-8a88-bcdbbf37bd96)
 
 
