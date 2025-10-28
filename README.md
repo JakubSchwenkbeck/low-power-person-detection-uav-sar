@@ -17,7 +17,7 @@ This repository is organized as follows:
 - notebooks/pipeline.ipynb - comprehensive pipeline walkthrough (model loading → training → optimization → benchmarking).
 
 
-For a quick idea what we wanted to do, take a look at this demo video:
+For a quick idea what we did, take a look at this demo video:
 
 https://github.com/user-attachments/assets/02fc9ed3-450b-45ba-8a88-bcdbbf37bd96
 
