@@ -37,8 +37,8 @@ def run(model_path: str, video_path: str, output_video_path: str):
                 frames.append(image_path)
                 durations.append(inference_time)
 
-                # cv2.imshow("YOLO", image)
-                # cv2.waitKey(1)
+                cv2.imshow("YOLO", image)
+                cv2.waitKey(1)
 
         except:
             print("Interrupted — building video...")
@@ -56,9 +56,9 @@ def run(model_path: str, video_path: str, output_video_path: str):
 def main(argv=None):
 
     parser = argparse.ArgumentParser()
-    parser.add_argument("model-path", help="Path to the model file")
-    parser.add_argument("video-path", help="Path to the input video file")
-    parser.add_argument("output-video-path", help="Path to the output video file")
+    parser.add_argument("model_path", help="Path to the model file")
+    parser.add_argument("video_path", help="Path to the input video file")
+    parser.add_argument("output_video_path", help="Path to the output video file")
 
     args = parser.parse_args(argv)
 

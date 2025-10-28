@@ -9,8 +9,8 @@ from tqdm import tqdm
 import json
 from datetime import datetime
 
-MODEL_PATH = 'data/models'
-IMAGES_PATH = 'data/images/val2017'
+MODEL_PATH = 'models'
+IMAGES_PATH = 'images'
 
 P_idle = 1.5
 P_max = 4.0
