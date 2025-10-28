@@ -16,7 +16,9 @@ P_idle = 1.5
 P_max = 4.0
 
 timestamp = datetime.now().strftime("%m_%d_%H%M%S")
-OUTPUT_FILE = f'output/benchmark_results_{timestamp}.json'
+OUTPUT_DIR = os.path.join('output', 'benchmarks')
+os.makedirs(OUTPUT_DIR, exist_ok=True)
+OUTPUT_FILE = os.path.join(OUTPUT_DIR, f'benchmark_results_{timestamp}.json')
 
 def run(amount_of_images=50):
     results = {
