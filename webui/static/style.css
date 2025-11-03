@@ -1,0 +1,5 @@
+body { font-family: Arial, sans-serif; margin: 24px; }
+h1 { color: #2a6f97 }
+section { margin-bottom: 20px; padding: 12px; border: 1px solid #ddd; border-radius: 6px }
+label { display: block; margin-top: 8px }
+button { margin-top: 8px }

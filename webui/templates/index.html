@@ -1,0 +1,54 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>Model Deployment UI</title>
+    <link rel="stylesheet" href="/static/style.css">
+  </head>
+  <body>
+    <h1>Model Deployment UI</h1>
+
+    <section>
+      <h2>Available models</h2>
+      <ul>
+        {% for m in models %}
+        <li>{{ m }}</li>
+        {% endfor %}
+      </ul>
+    </section>
+
+    <section>
+      <h2>Run model on video</h2>
+      <form action="/run" method="post" enctype="multipart/form-data">
+        <label for="model">Model:</label>
+        <select name="model" id="model">
+          {% for m in models %}
+          <option value="{{ m }}">{{ m }}</option>
+          {% endfor %}
+        </select>
+        <label for="video">Video file:</label>
+        <input type="file" name="video" accept="video/*" required />
+        <button type="submit">Run</button>
+      </form>
+    </section>
+
+    <section>
+      <h2>Benchmarks</h2>
+      <ul>
+        {% for b in benchmarks %}
+        <li><a href="/bench/{{ b }}">{{ b }}</a></li>
+        {% endfor %}
+      </ul>
+    </section>
+
+    <section>
+      <h2>Plots</h2>
+      <ul>
+        {% for p in plots %}
+        <li><img src="/static/../output/plots/{{ p }}" alt="{{ p }}" style="max-width:300px"/></li>
+        {% endfor %}
+      </ul>
+    </section>
+
+  </body>
+</html>
