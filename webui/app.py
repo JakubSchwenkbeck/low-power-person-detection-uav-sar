@@ -36,11 +36,7 @@ def list_models():
 @app.get('/', response_class=HTMLResponse)
 def index(request: Request):
     models = list_models()
-    plots = []
-    plots_dir = ROOT / 'output' / 'plots'
-    if plots_dir.exists():
-        plots = sorted([p.name for p in plots_dir.iterdir() if p.is_file()])
-    return templates.TemplateResponse('index.html', { 'request': request, 'models': models, 'plots': plots })
+    return templates.TemplateResponse('index.html', { 'request': request, 'models': models })
 
 
 @app.get('/inference', response_class=HTMLResponse)
@@ -92,5 +88,10 @@ def compare(request: Request, name: str = None):
                 except Exception:
                     data = None
 
-    return templates.TemplateResponse('compare.html', { 'request': request, 'benchmarks': benchmarks, 'data': data, 'selected': name })
+    plots = []
+    plots_dir = ROOT / 'output' / 'plots'
+    if plots_dir.exists():
+        plots = sorted([p.name for p in plots_dir.iterdir() if p.is_file()])
+
+    return templates.TemplateResponse('compare.html', { 'request': request, 'benchmarks': benchmarks, 'data': data, 'selected': name, 'plots': plots })
 
