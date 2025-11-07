@@ -1,10 +1,8 @@
-import tflite_runtime.interpreter as tflite
-from edge_impulse_linux.image import ImageImpulseRunner
 import numpy as np
 import cv2
 
-
 PERSON_CLASS_ID = 0
+
 
 class Model:
 
@@ -12,7 +10,16 @@ class Model:
         assert model_type in ['yolo', 'fomo']
         self.model_type = model_type
 
+        # Lazy imports for optional heavy dependencies
         if model_type == 'yolo':
+            try:
+                import tflite_runtime.interpreter as tflite
+            except Exception as e:
+                raise ImportError(
+                    "tflite_runtime is required to load 'yolo' models."
+                    " Install tflite_runtime in your environment or use a different model type."
+                ) from e
+
             self.interpreter = tflite.Interpreter(
                 model_path=path,
                 num_threads=4,
@@ -26,6 +33,14 @@ class Model:
 
             self.input_size = (self.interpreter_input_details['shape'][1], self.interpreter_input_details['shape'][2])
         else:
+            try:
+                from edge_impulse_linux.image import ImageImpulseRunner
+            except Exception as e:
+                raise ImportError(
+                    "edge_impulse_linux is required to load 'fomo' models."
+                    " Install edge_impulse_linux in your environment or use a different model type."
+                ) from e
+
             self.interpreter = ImageImpulseRunner(path)
             self.interpreter.init()
 

@@ -10,7 +10,6 @@ import time
 import cv2
 import numpy as np
 
-from src.runtime.model import Model
 
 ROOT = Path(__file__).resolve().parents[1]
 MODELS_DIR = ROOT / 'models'
@@ -35,6 +34,8 @@ def list_models():
 def run_inference(model_path: str, video_path: str, output_path: str):
     # Use the existing Model class to perform inference on a video file and write an output video
     model_file = str(MODELS_DIR / model_path)
+    # Import Model lazily to avoid requiring tflite_runtime at web server startup.
+    from src.runtime.model import Model
     model = Model(model_type='yolo', path=model_file)
 
     cap = cv2.VideoCapture(video_path)

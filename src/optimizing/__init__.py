@@ -6,6 +6,6 @@ TinyML package for edge AI deployment
 __version__ = "0.1.0"
 __author__ = "Jakub Schwenkbeck, Timon Coucke, Gabriele Pattarozzi"
 
-from . import main
-from . import optimize_model
-from . import load_model
+# import submodules explicitly, e.g from src.optimizing.load_model import load_yolo
+
+__all__ = ["__version__", "__author__"]
