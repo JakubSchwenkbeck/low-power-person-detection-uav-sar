@@ -1,6 +1,6 @@
 import os
-from load_model import load_yolo#, load_mobilenet_ssd, load_efficientdet
-from optimize_model import optimize_model
+from .load_model import load_yolo
+from .optimize_model import optimize_model
 
 def main():
     """

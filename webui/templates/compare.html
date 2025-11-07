@@ -1,0 +1,45 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>Benchmarks — Model Deployment UI</title>
+  <link rel="stylesheet" href="/static/style.css?v=2">
+  </head>
+  <body>
+    <h1>Benchmark comparison</h1>
+
+    <section>
+      <h2>Available benchmark files</h2>
+      <ul>
+        {% for b in benchmarks %}
+          <li><a href="/compare?name={{ b }}">{{ b }}</a></li>
+        {% endfor %}
+      </ul>
+    </section>
+
+    {% if data %}
+      <section>
+        <h2>Selected: {{ selected }}</h2>
+        <pre style="white-space:pre-wrap;background:#f6f6f6;padding:10px;border:1px solid #ddd">{{ data | tojson(indent=2) }}</pre>
+      </section>
+    {% else %}
+      <p>No benchmark selected.</p>
+    {% endif %}
+
+    {% if plots %}
+      <section>
+        <h2>Plots</h2>
+        <div style="display:flex;flex-wrap:wrap;gap:12px">
+          {% for p in plots %}
+            <div style="width:240px;border:1px solid #eee;padding:6px">
+              <img src="/output/plots/{{ p }}" style="width:100%;height:auto" alt="{{ p }}" />
+              <div style="font-size:0.85em;margin-top:6px">{{ p }}</div>
+            </div>
+          {% endfor %}
+        </div>
+      </section>
+    {% endif %}
+
+    <p style="margin-top:20px"><a href="/">Back to landing</a> · <a href="/inference">Run inference</a></p>
+  </body>
+</html>
