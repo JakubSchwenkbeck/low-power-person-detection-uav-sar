@@ -1,54 +1,30 @@
 <!doctype html>
 <html>
-  <head>
-    <meta charset="utf-8" />
-    <title>Model Deployment UI</title>
-    <link rel="stylesheet" href="/static/style.css">
-  </head>
-  <body>
-    <h1>Model Deployment UI</h1>
+	<head>
+		<meta charset="utf-8" />
+		<title>Landing — Model Deployment UI</title>
+		<link rel="stylesheet" href="/static/style.css">
+	</head>
+	<body>
+		<h1>Model Deployment — Landing</h1>
 
-    <section>
-      <h2>Available models</h2>
-      <ul>
-        {% for m in models %}
-        <li>{{ m }}</li>
-        {% endfor %}
-      </ul>
-    </section>
+		<section>
+			<h2>Demo video</h2>
+			<!-- Embedded YouTube demo (replace with your video id) -->
+			<div style="max-width:800px">
+				<iframe width="800" height="450" src="https://www.youtube.com/embed/dQw4w9WgXcQ" title="Demo video" frameborder="0" allowfullscreen></iframe>
+			</div>
+		</section>
 
-    <section>
-      <h2>Run model on video</h2>
-      <form action="/run" method="post" enctype="multipart/form-data">
-        <label for="model">Model:</label>
-        <select name="model" id="model">
-          {% for m in models %}
-          <option value="{{ m }}">{{ m }}</option>
-          {% endfor %}
-        </select>
-        <label for="video">Video file:</label>
-        <input type="file" name="video" accept="video/*" required />
-        <button type="submit">Run</button>
-      </form>
-    </section>
+		<section>
+			<h2>Quick links</h2>
+			<ul>
+				<li><a href="/inference">Run inference (live)</a></li>
+				<li><a href="/compare">Compare benchmark results</a></li>
+			</ul>
+		</section>
 
-    <section>
-      <h2>Benchmarks</h2>
-      <ul>
-        {% for b in benchmarks %}
-        <li><a href="/bench/{{ b }}">{{ b }}</a></li>
-        {% endfor %}
-      </ul>
-    </section>
-
-    <section>
-      <h2>Plots</h2>
-      <ul>
-        {% for p in plots %}
-        <li><img src="/static/../output/plots/{{ p }}" alt="{{ p }}" style="max-width:300px"/></li>
-        {% endfor %}
-      </ul>
-    </section>
-
-  </body>
+		<p style="margin-top:20px;color:#666;font-size:0.9em">This is a lightweight base UI. The inference page contains dummy buttons and a simple upload flow; the compare page shows benchmark JSON as a dynamic table.</p>
+	</body>
 </html>
+

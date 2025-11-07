@@ -1,0 +1,34 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>Inference — Model Deployment UI</title>
+    <link rel="stylesheet" href="/static/style.css">
+  </head>
+  <body>
+    <h1>Run Inference</h1>
+
+    <form action="/run" method="post" enctype="multipart/form-data">
+      <label for="model">Choose a model:</label>
+      <select id="model" name="model">
+        {% for m in models %}
+          <option value="{{ m }}">{{ m }}</option>
+        {% endfor %}
+      </select>
+      <br/><br/>
+
+      <label for="video">Upload video:</label>
+      <input id="video" name="video" type="file" accept="video/*" required />
+      <br/><br/>
+
+      <label for="images">Benchmark images (dummy):</label>
+      <input id="images" name="images" type="number" value="50" min="1" />
+      <br/><br/>
+
+      <button type="submit" name="_action" value="run">Run (background)</button>
+      <button type="submit" name="benchmark" value="1">Run + Benchmark (background)</button>
+    </form>
+
+    <p style="margin-top:20px"><a href="/">Back to landing</a> · <a href="/compare">Compare benchmarks</a></p>
+  </body>
+</html>

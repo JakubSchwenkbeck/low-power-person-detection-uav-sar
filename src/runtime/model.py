@@ -77,7 +77,6 @@ class Model:
         if self.model_type == 'yolo':
                 
             output = np.squeeze(output).T
-
             boxes = output[:, :4]
             class_scores = output[:, 4:]
 
@@ -87,36 +86,93 @@ class Model:
             filtered_boxes = boxes[mask]
             filtered_scores = person_scores[mask]
 
-            indices = cv2.dnn.NMSBoxes(
-                bboxes=filtered_boxes,
-                scores=filtered_scores,
-                score_threshold=conf_threshold,
-                nms_threshold=nms_threshold
-            )
+            # No detections
+            if filtered_boxes.size == 0:
+                return None
 
-            results = [list(box) + [score] for box, score in zip(filtered_boxes[indices], filtered_scores[indices])]
+            img_height, img_width, _ = image.shape
+
+            # Convert normalized center-format boxes [cx,cy,w,h] to pixel [x,y,w,h]
+            pixel_boxes = []
+            for b in filtered_boxes:
+                cx, cy, w, h = b
+                x = int(cx * img_width - (w * img_width) / 2)
+                y = int(cy * img_height - (h * img_height) / 2)
+                w_px = int(w * img_width)
+                h_px = int(h * img_height)
+                # ensure box inside image
+                x = max(0, x)
+                y = max(0, y)
+                w_px = max(0, min(w_px, img_width - x))
+                h_px = max(0, min(h_px, img_height - y))
+                pixel_boxes.append([x, y, w_px, h_px])
+
+            # Run NMS on pixel boxes
+            # OpenCV expects lists, and returns indices in various formats depending on version
+            try:
+                indices = cv2.dnn.NMSBoxes(pixel_boxes, filtered_scores.tolist(), conf_threshold, nms_threshold)
+            except Exception:
+                # fallback: no nms
+                indices = list(range(len(pixel_boxes)))
+
+            # normalize indices to flat list
+            flat_indices = []
+            if indices is None:
+                flat_indices = []
+            elif isinstance(indices, (list, tuple)):
+                # could be list of ints or list of [i]
+                for it in indices:
+                    if isinstance(it, (list, tuple, np.ndarray)):
+                        flat_indices.append(int(it[0]))
+                    else:
+                        flat_indices.append(int(it))
+            else:
+                try:
+                    flat = np.array(indices).flatten()
+                    flat_indices = [int(x) for x in flat]
+                except Exception:
+                    flat_indices = []
+
+            results_pixels = []
+            for i in flat_indices:
+                if i < 0 or i >= len(pixel_boxes):
+                    continue
+                x, y, w_px, h_px = pixel_boxes[i]
+                score = float(filtered_scores[i])
+                results_pixels.append([x, y, x + w_px, y + h_px, score])
 
         else:
             bboxes = output['bounding_boxes']
-            results = [[box['x'], box['y'], box['width'], box['height'], box['value']] for box in bboxes if box['label'] == '0' and box['value'] > conf_threshold]
+            results_pixels = []
+            img_height, img_width, _ = image.shape
+            for box in bboxes:
+                if box['label'] == '0' and box['value'] > conf_threshold:
+                    cx = box['x']
+                    cy = box['y']
+                    w = box['width']
+                    h = box['height']
+                    x1 = int(cx * img_width - w * img_width / 2)
+                    y1 = int(cy * img_height - h * img_height / 2)
+                    x2 = int(cx * img_width + w * img_width / 2)
+                    y2 = int(cy * img_height + h * img_height / 2)
+                    results_pixels.append([x1, y1, x2, y2, float(box['value'])])
 
-        if len(results) == 0:
+        if len(results_pixels) == 0:
             return None
-        
-        img_height, img_width, _ = image.shape
 
-        for result in results:
-            x, y, w, h, score = result
-            x1 = int(x * img_width - w * img_width / 2)
-            y1 = int(y * img_height - h * img_height / 2)
-            x2 = int(x * img_width + w * img_width / 2)
-            y2 = int(y * img_height + h * img_height / 2)
+        # Draw boxes
+        for result in results_pixels:
+            x1, y1, x2, y2, score = result
+            # clip
+            x1 = max(0, min(x1, image.shape[1] - 1))
+            x2 = max(0, min(x2, image.shape[1] - 1))
+            y1 = max(0, min(y1, image.shape[0] - 1))
+            y2 = max(0, min(y2, image.shape[0] - 1))
 
             cv2.rectangle(image, (x1, y1), (x2, y2), (255, 0, 0), 2)
-
-            cv2.putText(image, 
-                        str(score),
-                        (x1, y1 - 10),
+            cv2.putText(image,
+                        f"{score:.2f}",
+                        (x1, max(y1 - 10, 0)),
                         cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 1, lineType=cv2.LINE_AA)
 
         return image

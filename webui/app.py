@@ -9,6 +9,7 @@ from pathlib import Path
 import time
 import cv2
 import numpy as np
+import json
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -18,6 +19,9 @@ OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
 
 app = FastAPI(title='Model Deployment UI')
 app.mount('/static', StaticFiles(directory=ROOT / 'webui' / 'static'), name='static')
+# Serve generated outputs (plots, benchmarks, results) under /output
+app.mount('/output', StaticFiles(directory=ROOT / 'output'), name='output')
+
 templates = Jinja2Templates(directory=ROOT / 'webui' / 'templates')
 
 
@@ -80,8 +84,17 @@ def index(request: Request):
     return templates.TemplateResponse('index.html', { 'request': request, 'models': models, 'benchmarks': benchmarks, 'plots': plots })
 
 
+@app.get('/inference', response_class=HTMLResponse)
+def inference(request: Request):
+    """Simple inference page with a model selector and upload form.
+    The form posts to /run and uses the existing background runner. This page is intentionally minimal (dummy Run/Benchmark controls).
+    """
+    models = list_models()
+    return templates.TemplateResponse('inference.html', { 'request': request, 'models': models })
+
+
 @app.post('/run')
-def run_model(request: Request, background_tasks: BackgroundTasks, model: str = Form(...), video: UploadFile = File(...)):
+def run_model(request: Request, background_tasks: BackgroundTasks, model: str = Form(...), video: UploadFile = File(...), benchmark: str = Form(None), images: int = Form(50)):
     # save uploaded video
     uid = uuid.uuid4().hex
     temp_dir = OUTPUT_DIR / uid
@@ -92,7 +105,21 @@ def run_model(request: Request, background_tasks: BackgroundTasks, model: str = 
 
     output_video = temp_dir / f'out_{video.filename.rsplit('.',1)[0]}.mp4'
 
+    # schedule inference
     background_tasks.add_task(run_inference, model, str(video_path), str(output_video))
+
+    # optionally schedule a benchmark run (runs on all models and writes JSON to output/benchmarks)
+    if benchmark:
+        def _run_benchmark(amount):
+            import importlib
+            bmod = importlib.import_module('src.runtime.benchmark')
+            try:
+                bmod.run(amount_of_images=amount)
+            except TypeError:
+                # older signature may accept a single positional arg
+                bmod.run(amount)
+
+        background_tasks.add_task(_run_benchmark, int(images or 50))
 
     return RedirectResponse(url=f'/result/{uid}', status_code=303)
 
@@ -109,6 +136,24 @@ def result(request: Request, uid: str):
     return templates.TemplateResponse('result.html', {'request': request, 'ready': ready, 'path': out_video.name if ready else None, 'uid': uid})
 
 
+@app.get('/compare', response_class=HTMLResponse)
+def compare(request: Request, name: str = None):
+    bench_dir = ROOT / 'output' / 'benchmarks'
+    benchmarks = []
+    if bench_dir.exists():
+        benchmarks = sorted([p.name for p in bench_dir.iterdir() if p.is_file()])
+
+    data = None
+    if name:
+        path = bench_dir / name
+        if path.exists():
+            import json
+            with open(path, 'r') as f:
+                data = json.load(f)
+
+    return templates.TemplateResponse('compare.html', { 'request': request, 'benchmarks': benchmarks, 'data': data, 'selected': name })
+
+
 @app.get('/download/{uid}/{filename}')
 def download(uid: str, filename: str):
     file_path = OUTPUT_DIR / uid / filename
@@ -123,3 +168,78 @@ def get_benchmark(name: str):
     if bench_file.exists():
         return FileResponse(str(bench_file), media_type='application/json')
     return { 'error': 'not found' }
+
+
+@app.post('/bench/run')
+def run_single_benchmark(background_tasks: BackgroundTasks, model: str = Form(...), images: int = Form(50)):
+    """Start benchmark for a single model and stream progress via SSE (see /bench/stream/{id})."""
+    # validate model exists
+    model_path = MODELS_DIR / model
+    if not model_path.exists() or not model_path.suffix == '.tflite':
+        return { 'error': 'model not found or unsupported (expect .tflite file)' }
+
+    run_id = uuid.uuid4().hex
+    status_dir = ROOT / 'output' / 'benchmarks' / 'status'
+    status_dir.mkdir(parents=True, exist_ok=True)
+    status_file = status_dir / f'{run_id}.log'
+    result_file = ROOT / 'output' / 'benchmarks' / f'benchmark_{run_id}.json'
+
+    def _write_progress(current, total, interim):
+        # append one JSON line per update
+        try:
+            with open(status_file, 'a') as f:
+                f.write(json.dumps({'current': current, 'total': total, 'metrics': interim}) + '\n')
+        except Exception:
+            pass
+
+    def _bench_task(mpath, amount, status_p, result_p):
+        import importlib
+        bmod = importlib.import_module('src.runtime.benchmark')
+        try:
+            res = bmod.benchmark(str(mpath), int(amount), progress_callback=_write_progress)
+            # write final result JSON
+            with open(result_p, 'w') as f:
+                json.dump({'model': mpath.name, 'result': res}, f, indent=4)
+            # notify completion
+            with open(status_p, 'a') as f:
+                f.write(json.dumps({'finished': True, 'result_file': result_p.name}) + '\n')
+        except Exception as e:
+            with open(status_p, 'a') as f:
+                f.write(json.dumps({'error': str(e)}) + '\n')
+
+    # schedule background benchmark task
+    background_tasks.add_task(_bench_task, model_path, images, status_file, result_file)
+
+    return { 'run_id': run_id, 'stream_url': f'/bench/stream/{run_id}' }
+
+
+@app.get('/bench/stream/{run_id}')
+def bench_stream(run_id: str):
+    """Server-Sent Events stream that tails the status log for a run id."""
+    from fastapi.responses import StreamingResponse
+
+    status_dir = ROOT / 'output' / 'benchmarks' / 'status'
+    status_file = status_dir / f'{run_id}.log'
+
+    def event_generator(path):
+        # wait for file to be created
+        import time as _time
+        while not path.exists():
+            _time.sleep(0.1)
+
+        with open(path, 'r') as f:
+            # yield existing lines
+            for line in f:
+                yield f'data: {line.strip()}\n\n'
+
+            # then tail
+            while True:
+                where = f.tell()
+                line = f.readline()
+                if not line:
+                    _time.sleep(0.2)
+                    f.seek(where)
+                else:
+                    yield f'data: {line.strip()}\n\n'
+
+    return StreamingResponse(event_generator(status_file), media_type='text/event-stream')
