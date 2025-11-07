@@ -8,13 +8,12 @@
 	<body>
 		<h1>Model Deployment — Landing</h1>
 
-		<section>
-			<h2>Demo video</h2>
-			<!-- Embedded YouTube demo (replace with your video id) -->
-			<div style="max-width:800px">
-				<iframe width="800" height="450" src="https://www.youtube.com/embed/dQw4w9WgXcQ" title="Demo video" frameborder="0" allowfullscreen></iframe>
-			</div>
-		</section>
+			<section>
+				<h2>Demo video</h2>
+				<div style="max-width:800px">
+					<iframe width="800" height="450" src="https://www.youtube.com/embed/dQw4w9WgXcQ" title="Demo video" frameborder="0" allowfullscreen></iframe>
+				</div>
+			</section>
 
 		<section>
 			<h2>Quick links</h2>
@@ -24,7 +23,21 @@
 			</ul>
 		</section>
 
-		<p style="margin-top:20px;color:#666;font-size:0.9em">This is a lightweight base UI. The inference page contains dummy buttons and a simple upload flow; the compare page shows benchmark JSON as a dynamic table.</p>
+			{% if plots %}
+				<section>
+					<h2>Plots</h2>
+					<div style="display:flex;flex-wrap:wrap;gap:12px">
+						{% for p in plots %}
+							<div style="width:240px;border:1px solid #eee;padding:6px">
+								<img src="/output/plots/{{ p }}" style="width:100%;height:auto" alt="{{ p }}" />
+								<div style="font-size:0.85em;margin-top:6px">{{ p }}</div>
+							</div>
+						{% endfor %}
+					</div>
+				</section>
+			{% endif %}
+
+			<p style="margin-top:20px;color:#666;font-size:0.9em">This is a lightweight base UI.</p>
 	</body>
 </html>
 

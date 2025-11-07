@@ -26,6 +26,20 @@
       <p>No benchmark selected.</p>
     {% endif %}
 
+    {% if plots %}
+      <section>
+        <h2>Plots</h2>
+        <div style="display:flex;flex-wrap:wrap;gap:12px">
+          {% for p in plots %}
+            <div style="width:240px;border:1px solid #eee;padding:6px">
+              <img src="/output/plots/{{ p }}" style="width:100%;height:auto" alt="{{ p }}" />
+              <div style="font-size:0.85em;margin-top:6px">{{ p }}</div>
+            </div>
+          {% endfor %}
+        </div>
+      </section>
+    {% endif %}
+
     <p style="margin-top:20px"><a href="/">Back to landing</a> · <a href="/inference">Run inference</a></p>
   </body>
 </html>
