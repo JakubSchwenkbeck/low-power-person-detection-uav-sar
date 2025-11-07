@@ -12,10 +12,3 @@ pyaudio
 moviepy
 memory-profiler
 jupyter
-
-# web UI requirements
-fastapi
-uvicorn[standard]
-jinja2
-aiofiles
-python-multipart
