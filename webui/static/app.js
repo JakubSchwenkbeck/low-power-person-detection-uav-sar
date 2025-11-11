@@ -213,7 +213,10 @@ async function startInference() {
         }
         
         if (data.complete) {
-            showStatus(`Inference complete! Processed ${data.total_frames} frames`, 'success');
+            const detectionMsg = data.frames_with_detections 
+                ? `Processed ${data.total_frames} frames - ${data.frames_with_detections} frames had detections`
+                : `Processed ${data.total_frames} frames - No detections found`;
+            showStatus(detectionMsg, data.frames_with_detections > 0 ? 'success' : 'info');
             stopInference();
             return;
         }

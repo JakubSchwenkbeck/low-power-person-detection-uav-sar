@@ -180,6 +180,7 @@ async def websocket_inference(websocket: WebSocket):
         
         # Load model
         model = load_model(model_path)
+        logger.info(f"Processing with conf_threshold={conf_threshold}, nms_threshold={nms_threshold}")
         
         # Open video
         cap = cv2.VideoCapture(video_path)
@@ -187,20 +188,30 @@ async def websocket_inference(websocket: WebSocket):
         
         frame_idx = 0
         inference_times = []
+        detection_count = 0
         
         while True:
             ret, frame = cap.read()
             if not ret:
                 break
             
-            # Run inference
+            # Run inference with custom thresholds
             start_time = time.time()
-            result_frame = model.inference(frame, postprocess=True)
+            result_frame = model.inference(
+                frame.copy(), 
+                postprocess=True,
+                conf_threshold=conf_threshold,
+                nms_threshold=nms_threshold
+            )
             inference_time = (time.time() - start_time) * 1000  # ms
             inference_times.append(inference_time)
             
             # Use original frame if no detections
-            display_frame = result_frame if result_frame is not None else frame
+            if result_frame is not None:
+                display_frame = result_frame
+                detection_count += 1
+            else:
+                display_frame = frame
             
             # Convert to base64
             frame_b64 = frame_to_base64(display_frame)
@@ -223,9 +234,11 @@ async def websocket_inference(websocket: WebSocket):
         cap.release()
         
         # Send completion message
+        logger.info(f"Inference complete: {detection_count}/{frame_idx} frames had detections")
         await websocket.send_json({
             "complete": True,
             "total_frames": frame_idx,
+            "frames_with_detections": detection_count,
             "avg_inference_time": f"{np.mean(inference_times):.2f}",
             "total_time": f"{sum(inference_times) / 1000:.2f}"
         })
