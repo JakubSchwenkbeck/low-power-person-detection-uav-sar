@@ -1,5 +1,13 @@
-import tflite_runtime.interpreter as tflite
-from edge_impulse_linux.image import ImageImpulseRunner
+try:
+    import tflite_runtime.interpreter as tflite
+except ImportError:
+    import tensorflow.lite as tflite
+
+try:
+    from edge_impulse_linux.image import ImageImpulseRunner
+except ImportError:
+    ImageImpulseRunner = None
+
 import numpy as np
 import cv2
 
@@ -26,6 +34,8 @@ class Model:
 
             self.input_size = (self.interpreter_input_details['shape'][1], self.interpreter_input_details['shape'][2])
         else:
+            if ImageImpulseRunner is None:
+                raise ImportError("edge_impulse_linux is required for FOMO models")
             self.interpreter = ImageImpulseRunner(path)
             self.interpreter.init()
 
