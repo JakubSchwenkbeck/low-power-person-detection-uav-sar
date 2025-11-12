@@ -54,11 +54,7 @@ function startInference() {
     $('inferenceFrame').style.display = 'block';
     
     const benchmarkMode = $('benchmarkMode').checked;
-    console.log('[DEBUG] Checkbox element:', $('benchmarkMode'));
-    console.log('[DEBUG] Checkbox checked property:', $('benchmarkMode').checked);
-    console.log('[DEBUG] benchmarkMode value:', benchmarkMode);
     
-    // Show/hide benchmark cards
     const benchmarkCards = ['memoryCard', 'cpuCard', 'tempCard', 'energyCard'];
     benchmarkCards.forEach(id => {
         $(id).style.display = benchmarkMode ? 'flex' : 'none';
@@ -75,8 +71,6 @@ function startInference() {
             nms_threshold: parseFloat($('nmsThreshold').value),
             benchmark: benchmarkMode
         };
-        console.log('[DEBUG] Sending config to server:', config);
-        console.log('[DEBUG] Benchmark mode value:', benchmarkMode, 'Type:', typeof benchmarkMode);
         
         showStatus(benchmarkMode ? 'Starting inference with benchmarking...' : 'Starting inference...', 'info');
         ws.send(JSON.stringify(config));
@@ -94,14 +88,11 @@ function startInference() {
         }
         
         if (data.complete) {
-            console.log('Inference complete, data:', data);
-            
             let msg = data.frames_with_detections 
                 ? `Processed ${data.total_frames} frames - ${data.frames_with_detections} had detections`
                 : `Processed ${data.total_frames} frames - No detections`;
             
             if (data.benchmark) {
-                console.log('Benchmark data found:', data.benchmark);
                 msg += `\n\nBenchmark Results:\n` +
                        `Avg Memory: ${data.benchmark.avg_memory_usage_MiB} MiB\n` +
                        `Avg CPU: ${data.benchmark.avg_cpu_usage_percent}%\n` +
@@ -110,12 +101,8 @@ function startInference() {
                     msg += `\nAvg Temp: ${data.benchmark.avg_temperature_C}°C`;
                 }
                 
-                // Generate plot if benchmark file was saved
                 if (data.benchmark_file) {
-                    console.log('Benchmark file saved at:', data.benchmark_file);
                     generatePlot(data.benchmark_file);
-                } else {
-                    console.warn('No benchmark_file in response');
                 }
             }
             
@@ -160,7 +147,6 @@ function startInference() {
 
 async function generatePlot(benchmarkFile) {
     try {
-        console.log('Generating plot for:', benchmarkFile);
         showStatus('Generating benchmark plots...', 'info');
         const response = await fetch('/api/plot_benchmark', {
             method: 'POST',
@@ -170,37 +156,27 @@ async function generatePlot(benchmarkFile) {
         
         if (!response.ok) {
             const error = await response.text();
-            console.error('Plot generation failed:', error);
             showStatus('Failed to generate plots: ' + error, 'error');
             return;
         }
         
         const data = await response.json();
-        console.log('Plot generation response:', data);
         
         if (data.success) {
             showStatus('Benchmark plots generated!', 'success');
             displayBenchmarkPlot(data.plot_file, benchmarkFile);
         }
     } catch (error) {
-        console.error('Error generating plot:', error);
         showStatus('Failed to generate plots: ' + error.message, 'error');
     }
 }
 
 function displayBenchmarkPlot(plotFile, jsonFile) {
-    console.log('Displaying plot:', plotFile);
-    console.log('JSON file:', jsonFile);
-    
     const resultsDiv = $('benchmarkResults');
     const contentDiv = $('benchmarkContent');
     
-    // Convert absolute path to relative for web display
     const plotPath = '/plots/' + plotFile.split('/').pop();
     const jsonPath = '/benchmarks/' + jsonFile.split('/').pop();
-    
-    console.log('Plot URL:', plotPath);
-    console.log('JSON URL:', jsonPath);
     
     contentDiv.innerHTML = `
         <div style="margin: 1rem 0;">

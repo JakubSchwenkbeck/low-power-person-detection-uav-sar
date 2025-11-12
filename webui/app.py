@@ -148,15 +148,11 @@ async def websocket_inference(websocket: WebSocket):
     await websocket.accept()
     try:
         config = await websocket.receive_json()
-        print(f"[DEBUG] Received config: {config}")
         
         model = load_model(config["model_path"])
         cap = cv2.VideoCapture(config["video_path"])
         total_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
         benchmark_mode = config.get("benchmark", False)
-        
-        print(f"[DEBUG] Benchmark mode: {benchmark_mode}")
-        print(f"[DEBUG] Total frames: {total_frames}")
         
         frame_idx = 0
         inference_times = []
@@ -174,7 +170,6 @@ async def websocket_inference(websocket: WebSocket):
             start_time = time.time()
             
             if benchmark_mode:
-                print(f"[DEBUG] Frame {frame_idx}: Running in benchmark mode")
                 cpu_before = psutil.cpu_percent(interval=None)
                 mem_usage = memory_usage((model.inference, (frame.copy(), True, config.get("conf_threshold", 0.5), config.get("nms_threshold", 0.45))), interval=0.01, max_usage=True)
                 result_frame = model.inference(frame.copy(), postprocess=True, 
@@ -186,14 +181,11 @@ async def websocket_inference(websocket: WebSocket):
                 temp = get_cpu_temp()
                 if temp:
                     temp_values.append(temp)
-                    print(f"[DEBUG] Frame {frame_idx}: Temp={temp}°C")
                 
                 memory_values.append(mem_usage)
                 cpu_usage_values.append(cpu_usage)
                 energy = P_IDLE + (P_MAX - P_IDLE) * (cpu_usage / 100)
                 energy_values.append(energy)
-                
-                print(f"[DEBUG] Frame {frame_idx}: Memory={mem_usage:.2f} MiB, CPU={cpu_usage:.1f}%, Energy={energy:.2f}W")
             else:
                 result_frame = model.inference(frame.copy(), postprocess=True, 
                                               conf_threshold=config.get("conf_threshold", 0.5),
@@ -231,10 +223,6 @@ async def websocket_inference(websocket: WebSocket):
         
         cap.release()
         
-        print(f"[DEBUG] Inference complete. Total frames: {frame_idx}")
-        print(f"[DEBUG] Benchmark mode was: {benchmark_mode}")
-        print(f"[DEBUG] Memory values collected: {len(memory_values)}")
-        
         result = {
             "complete": True,
             "total_frames": frame_idx,
@@ -244,7 +232,6 @@ async def websocket_inference(websocket: WebSocket):
         }
         
         if benchmark_mode and len(memory_values) > 0:
-            print(f"[DEBUG] Creating benchmark results...")
             benchmark_data = {
                 "avg_memory_usage_MiB": f"{np.mean(memory_values):.2f}",
                 "avg_cpu_usage_percent": f"{np.mean(cpu_usage_values):.2f}",
@@ -254,14 +241,10 @@ async def websocket_inference(websocket: WebSocket):
                 benchmark_data["avg_temperature_C"] = f"{np.mean(temp_values):.2f}"
             
             result["benchmark"] = benchmark_data
-            print(f"[DEBUG] Benchmark data added to result")
             
-            # Save full benchmark results to JSON
             timestamp = datetime.now().strftime("%m_%d_%H%M%S")
             model_name = Path(config["model_path"]).stem
             video_name = Path(config["video_path"]).stem
-            
-            print(f"[DEBUG] Model: {model_name}, Video: {video_name}, Timestamp: {timestamp}")
             
             full_benchmark = {
                 "timestamp": timestamp,
@@ -294,25 +277,17 @@ async def websocket_inference(websocket: WebSocket):
                 full_benchmark["results"]["avg_temperature_C"] = float(np.mean(temp_values))
             
             benchmark_file = BENCHMARK_DIR / f"benchmark_{model_name}_{video_name}_{timestamp}.json"
-            print(f"[DEBUG] Saving benchmark to: {benchmark_file}")
             
             try:
                 with open(benchmark_file, 'w') as f:
                     json.dump(full_benchmark, f, indent=4)
-                print(f"[DEBUG] ✓ Benchmark file saved successfully!")
-                print(f"[DEBUG] File size: {benchmark_file.stat().st_size} bytes")
             except Exception as e:
-                print(f"[ERROR] Failed to save benchmark file: {e}")
+                print(f"Error saving benchmark file: {e}")
             
             result["benchmark_file"] = str(benchmark_file)
-            print(f"[DEBUG] Benchmark file path added to result: {result['benchmark_file']}")
-        else:
-            print(f"[DEBUG] NOT saving benchmark - mode={benchmark_mode}, memory_values={len(memory_values)}")
-        
-        print(f"[DEBUG] Sending final result: {result.keys()}")
         await websocket.send_json(result)
     except Exception as e:
-        print(f"[ERROR] Exception in websocket_inference: {e}")
+        print(f"Error in websocket_inference: {e}")
         import traceback
         traceback.print_exc()
         await websocket.send_json({"error": str(e)})
