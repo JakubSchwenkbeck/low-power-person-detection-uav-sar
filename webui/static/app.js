@@ -53,17 +53,27 @@ function startInference() {
     $('videoContainer').querySelector('.placeholder')?.remove();
     $('inferenceFrame').style.display = 'block';
     
+    const benchmarkMode = $('benchmarkMode').checked;
+    
+    const benchmarkCards = ['memoryCard', 'cpuCard', 'tempCard', 'energyCard'];
+    benchmarkCards.forEach(id => {
+        $(id).style.display = benchmarkMode ? 'flex' : 'none';
+    });
+    
     const protocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
     ws = new WebSocket(`${protocol}//${location.host}/ws/inference`);
     
     ws.onopen = () => {
-        showStatus('Starting inference...', 'info');
-        ws.send(JSON.stringify({
+        const config = {
             video_path: uploadedVideo.path,
             model_path: selectedModel,
             conf_threshold: parseFloat($('confThreshold').value),
-            nms_threshold: parseFloat($('nmsThreshold').value)
-        }));
+            nms_threshold: parseFloat($('nmsThreshold').value),
+            benchmark: benchmarkMode
+        };
+        
+        showStatus(benchmarkMode ? 'Starting inference with benchmarking...' : 'Starting inference...', 'info');
+        ws.send(JSON.stringify(config));
     };
     
     let lastTime = Date.now();
@@ -78,9 +88,24 @@ function startInference() {
         }
         
         if (data.complete) {
-            const msg = data.frames_with_detections 
+            let msg = data.frames_with_detections 
                 ? `Processed ${data.total_frames} frames - ${data.frames_with_detections} had detections`
                 : `Processed ${data.total_frames} frames - No detections`;
+            
+            if (data.benchmark) {
+                msg += `\n\nBenchmark Results:\n` +
+                       `Avg Memory: ${data.benchmark.avg_memory_usage_MiB} MiB\n` +
+                       `Avg CPU: ${data.benchmark.avg_cpu_usage_percent}%\n` +
+                       `Avg Energy: ${data.benchmark.avg_energy_consumption_W} W`;
+                if (data.benchmark.avg_temperature_C) {
+                    msg += `\nAvg Temp: ${data.benchmark.avg_temperature_C}°C`;
+                }
+                
+                if (data.benchmark_file) {
+                    generatePlot(data.benchmark_file);
+                }
+            }
+            
             showStatus(msg, data.frames_with_detections > 0 ? 'success' : 'info');
             stopInference();
             return;
@@ -99,11 +124,81 @@ function startInference() {
             $('avgInference').textContent = `${data.avg_inference_time} ms`;
             $('progress').textContent = `${data.progress.toFixed(1)}%`;
             $('progressFill').style.width = `${data.progress}%`;
+            
+            // Update benchmark metrics if available
+            if (data.memory_usage) {
+                $('memoryUsage').textContent = `${data.memory_usage} MiB`;
+            }
+            if (data.cpu_usage) {
+                $('cpuUsage').textContent = `${data.cpu_usage}%`;
+            }
+            if (data.temperature) {
+                $('temperature').textContent = `${data.temperature}°C`;
+            }
+            if (data.energy) {
+                $('energy').textContent = `${data.energy} W`;
+            }
         }
     };
     
     ws.onerror = () => stopInference();
     ws.onclose = () => isRunning && stopInference();
+}
+
+async function generatePlot(benchmarkFile) {
+    try {
+        showStatus('Generating benchmark plots...', 'info');
+        const response = await fetch('/api/plot_benchmark', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ benchmark_file: benchmarkFile })
+        });
+        
+        if (!response.ok) {
+            const error = await response.text();
+            showStatus('Failed to generate plots: ' + error, 'error');
+            return;
+        }
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            showStatus('Benchmark plots generated!', 'success');
+            displayBenchmarkPlot(data.plot_file, benchmarkFile);
+        }
+    } catch (error) {
+        showStatus('Failed to generate plots: ' + error.message, 'error');
+    }
+}
+
+function displayBenchmarkPlot(plotFile, jsonFile) {
+    const resultsDiv = $('benchmarkResults');
+    const contentDiv = $('benchmarkContent');
+    
+    const plotPath = '/plots/' + plotFile.split('/').pop();
+    const jsonPath = '/benchmarks/' + jsonFile.split('/').pop();
+    
+    contentDiv.innerHTML = `
+        <div style="margin: 1rem 0;">
+            <p style="margin-bottom: 1rem;">
+                <strong>Benchmark Data:</strong> ${jsonFile.split('/').pop()}<br>
+                <strong>Plot Generated:</strong> ${plotFile.split('/').pop()}
+            </p>
+            <img src="${plotPath}" alt="Benchmark Plot" style="width: 100%; border-radius: 12px; border: 1px solid var(--border);" 
+                 onerror="console.error('Failed to load image:', this.src)">
+            <div style="margin-top: 1rem; display: flex; gap: 1rem;">
+                <a href="${plotPath}" download class="btn btn-primary" style="flex: 1; text-decoration: none;">
+                    📥 Download Plot
+                </a>
+                <a href="${jsonPath}" download class="btn btn-secondary" style="flex: 1; text-decoration: none;">
+                    📄 Download JSON
+                </a>
+            </div>
+        </div>
+    `;
+    
+    resultsDiv.style.display = 'block';
+    resultsDiv.scrollIntoView({ behavior: 'smooth' });
 }
 
 function stopInference() {

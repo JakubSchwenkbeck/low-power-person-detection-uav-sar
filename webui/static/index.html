@@ -89,23 +89,31 @@
                 </div>
 
                 <!-- Advanced Settings -->
-                <details class="advanced-settings">
-                    <summary>Advanced Settings</summary>
-                    <div class="settings-content">
-                        <div class="form-group">
-                            <label for="confThreshold">
-                                Confidence Threshold: <span id="confValue">0.5</span>
-                            </label>
-                            <input type="range" id="confThreshold" min="0.1" max="1.0" step="0.05" value="0.5" class="slider">
+                                    <details class="advanced-settings">
+                        <summary>⚙️ Advanced Settings</summary>
+                        <div class="settings-content">
+                            <div class="form-group">
+                                <label>
+                                    Confidence Threshold: <span id="confValue">0.5</span>
+                                </label>
+                                <input type="range" id="confThreshold" class="slider" min="0" max="1" step="0.05" value="0.5">
+                            </div>
+                            <div class="form-group">
+                                <label>
+                                    NMS Threshold: <span id="nmsValue">0.45</span>
+                                </label>
+                                <input type="range" id="nmsThreshold" class="slider" min="0" max="1" step="0.05" value="0.45">
+                            </div>
+                            <div class="form-group">
+                                <label>
+                                    <input type="checkbox" id="benchmarkMode"> Enable Benchmark Mode
+                                </label>
+                                <p style="font-size: 0.875rem; color: var(--text-secondary); margin-top: 0.5rem;">
+                                    Collects memory, CPU, temperature, and energy metrics (slower processing)
+                                </p>
+                            </div>
                         </div>
-                        <div class="form-group">
-                            <label for="nmsThreshold">
-                                NMS Threshold: <span id="nmsValue">0.45</span>
-                            </label>
-                            <input type="range" id="nmsThreshold" min="0.1" max="1.0" step="0.05" value="0.45" class="slider">
-                        </div>
-                    </div>
-                </details>
+                    </details>
 
                 <!-- Action Buttons -->
                 <div class="action-buttons">
@@ -192,6 +200,57 @@
                             <div class="stat-value" id="progress">0%</div>
                         </div>
                     </div>
+
+                    <div class="stat-card" id="memoryCard" style="display: none;">
+                        <div class="stat-icon" style="background: linear-gradient(135deg, #a855f7 0%, #e879f9 100%);">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">
+                                <rect x="2" y="7" width="20" height="14" rx="2"/>
+                                <path d="M16 3v4M12 3v4M8 3v4"/>
+                            </svg>
+                        </div>
+                        <div class="stat-content">
+                            <div class="stat-label">Memory Usage</div>
+                            <div class="stat-value" id="memoryUsage">-</div>
+                        </div>
+                    </div>
+
+                    <div class="stat-card" id="cpuCard" style="display: none;">
+                        <div class="stat-icon" style="background: linear-gradient(135deg, #ef4444 0%, #f87171 100%);">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">
+                                <rect x="4" y="4" width="16" height="16" rx="2"/>
+                                <rect x="9" y="9" width="6" height="6"/>
+                                <path d="M9 1v3M15 1v3M9 20v3M15 20v3M20 9h3M20 15h3M1 9h3M1 15h3"/>
+                            </svg>
+                        </div>
+                        <div class="stat-content">
+                            <div class="stat-label">CPU Usage</div>
+                            <div class="stat-value" id="cpuUsage">-</div>
+                        </div>
+                    </div>
+
+                    <div class="stat-card" id="tempCard" style="display: none;">
+                        <div class="stat-icon" style="background: linear-gradient(135deg, #f59e0b 0%, #fbbf24 100%);">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">
+                                <path d="M14 14.76V3.5a2.5 2.5 0 0 0-5 0v11.26a4.5 4.5 0 1 0 5 0z"/>
+                            </svg>
+                        </div>
+                        <div class="stat-content">
+                            <div class="stat-label">Temperature</div>
+                            <div class="stat-value" id="temperature">-</div>
+                        </div>
+                    </div>
+
+                    <div class="stat-card" id="energyCard" style="display: none;">
+                        <div class="stat-icon" style="background: linear-gradient(135deg, #22c55e 0%, #4ade80 100%);">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">
+                                <path d="M6 7h3m-3 10h5m-5-7h5M16 21V3M19 21V3"/>
+                            </svg>
+                        </div>
+                        <div class="stat-content">
+                            <div class="stat-label">Energy</div>
+                            <div class="stat-value" id="energy">-</div>
+                        </div>
+                    </div>
                 </div>
 
                 <!-- Progress Bar -->
@@ -203,10 +262,18 @@
             </div>
         </div>
 
+        <!-- Benchmark Results Section -->
+        <div class="config-panel" id="benchmarkResults" style="margin-top: 2rem; display: none;">
+            <div class="panel-header">
+                <h2>📊 Benchmark Results</h2>
+            </div>
+            <div id="benchmarkContent"></div>
+        </div>
+
         <!-- Status Messages -->
         <div id="statusMessages"></div>
     </div>
 
-    <script src="/static/app.js"></script>
+    <script src="/static/app.js?v=2"></script>
 </body>
 </html>
