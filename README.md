@@ -13,7 +13,8 @@ This repository is organized as follows:
   - src/optimizing/ - model optimization scripts 
   - src/training/ - training code and dataset preparation
   - src/visualization/ - plotting and visualization utilities
-  - src/runtime/ - inference/runtime code for deployment on Hardware
+  - src/runtime/ - inference/runtime code for deployment on 
+- webui/ - code for a python based webui showcasing our key features including interference and benchmarking   
 - notebooks/pipeline.ipynb - comprehensive pipeline walkthrough (model loading → training → optimization → benchmarking).
 
 
